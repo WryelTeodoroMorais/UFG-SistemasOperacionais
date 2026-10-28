@@ -1,0 +1,2 @@
+Sentinela ML
+Execução isolada.
