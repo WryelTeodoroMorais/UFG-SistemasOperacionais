@@ -1,137 +1,151 @@
-# Sentinela ML
+# INF0336 - Seminário
 
-Projeto da equipe **Futhienas** para INF0336 — Sistemas Operacionais.
-Versão inicial **0.1.0**: planejamento de recursos e execução isolada de scripts
-Python. [Histórico de alterações](CHANGELOG.md).
+Trabalho consolidado até a **semana 2**. As instruções de instalação, uso e reprodução estão no
+[guia técnico](docs/GUIA_TECNICO.md).
+
+## Título do Seminário
+
+Sandbox e previsão de recursos com aprendizado de máquina
 
 ## Equipe
 
-| Participante | Matrícula |
-|---|---:|
-| Wender Viana Faria Santos | 202401832 |
-| William Félix Ferreira Alves da Silva | 202405859 |
-| Wryel Teodoro de Morais | 202405860 |
-| Lourenço Tabosa Paniago | 202401799 |
+| Matrícula | Nome completo |
+|---|---|
+| 202401832 | Wender Viana Faria Santos |
+| 202405859 | William Félix Ferreira Alves da Silva |
+| 202405860 | Wryel Teodoro de Morais |
+| 202401799 | Lourenço Tabosa Paniago |
 
-## Como funciona
+## Apresentações
 
-O planejador analisa o código Python e o tamanho da entrada. O método
-`heuristic` usa regras; `ml` usa uma árvore treinada para memória virtual e
-duração; `fixed` fornece a referência de 128 MiB e 2 s. As permissões de
-leitura e escrita são identificadas por AST nos métodos heurístico e ML.
-A política `authorize()` restringe todos os métodos aos tetos do operador.
+1. [Apresentação da segunda semana](docs/apresentacoes/semana-2/apresentacao-semana-2.pptx) e [versão PDF](docs/apresentacoes/semana-2/apresentacao-semana-2.pdf).
 
-O executor usa Bubblewrap, entrada somente leitura em `/input/data.txt`, saída
-em `/output` e rede externa isolada. Sem suporte ao isolamento, falha fechada.
-As sugestões não garantem conclusão: aliases, chamadas dinâmicas e argumentos
-do script podem representar demandas que a análise não reconhece.
+## Resumo
 
-## Instalação
+Este trabalho avalia recomendações de recursos para scripts Python executados em uma sandbox Linux. Comparamos um perfil fixo, regras heurísticas e uma árvore de decisão treinada com medições reais. Uma política independente restringe acessos e aplica os tetos do operador. No piloto da semana 2, os três métodos concluíram corretamente as oito tarefas de teste. A heurística recomendou o menor limite médio de memória virtual, enquanto os tempos e o consumo de RAM foram próximos. O fluxo está funcional, mas ainda não demonstra vantagem do ML.
 
-Requer Linux, Python 3.11+, Bubblewrap (`bwrap`) e namespaces de usuário e rede
-habilitados. Em Debian/Ubuntu, instale o pacote `bubblewrap`. Não execute como root.
+## Introdução
 
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m pip install --no-deps -e .
-source .venv/bin/activate
-sentinela doctor
-```
+### Motivação
 
-Os comandos abaixo pressupõem esse ambiente ativado. `sentinela status` mostra
-versão, comandos e métodos disponíveis; `sentinela --help` lista as opções.
+Uma sandbox restringe o ambiente de execução, mas o operador ainda precisa escolher limites de recursos. Valores altos permitem consumo desnecessário; valores baixos podem interromper tarefas legítimas. Investigamos se o aprendizado de máquina ajuda a recomendar limites menores, preservando a correção das tarefas.
 
-## Planejar e executar
+### Revisão bibliográfica
 
-```bash
-sentinela plan examples/uppercase.py --input examples/entrada.txt --allow-write
-sentinela run examples/uppercase.py --input examples/entrada.txt --output demo-output
-```
+O menor privilégio de Saltzer e Schroeder (1975) orienta a separação entre recomendação e autorização. Kwon et al. (2013), com o Mantis, motivam o uso de características dos programas para prever desempenho, sem garantir que seus resultados se transfiram para este estudo.
 
-O método padrão é `heuristic`; para usar o perfil fixo, acrescente
-`--method fixed`. O exemplo exporta `demo-output/result.txt`. Somente arquivos
-regulares diretamente em `/output` são exportados; symlinks não são seguidos.
-Arquivos existentes nunca são sobrescritos.
+Pedregosa et al. (2011) e a documentação do scikit-learn fundamentam a implementação da árvore e os cuidados de avaliação. A documentação do Bubblewrap e o manual getrlimit(2) descrevem o isolamento e os limites Linux utilizados.
 
-Os tetos são `--max-memory-mb`, `--max-wall-seconds`, `--cpu-seconds` e
-`--output-mb`. `plan` exige `--allow-write` para autorizar saída;
-`run` permite saída por padrão e aceita `--no-write` para bloqueá-la.
-Essa opção restringe `/output`; o `/tmp` interno continua disponível.
-Se nenhum arquivo for exportado, a pasta de saída não é criada.
+### Objetivos
 
-### Argumentos e relatórios
+- Executar scripts sob permissões e tetos definidos pelo operador.
+- Treinar um modelo para prever memória virtual e tempo decorrido.
+- Comparar suas recomendações e o consumo observado com os métodos fixo e heurístico.
 
-```bash
-sentinela run examples/text_stats.py --input examples/entrada.txt \
-  --output demo-stats --method fixed --arg=--save --report execution-report.json
-```
+## Metodologia
 
-O exemplo conta linhas, palavras e caracteres e exporta `stats.json`.
-Repita `--arg` para passar argumentos literalmente em `sys.argv`, sem shell
-(máximo de 128 argumentos e 32 kB). Use `--arg=--opcao` para valores com hífen.
-Para exibir somente stdout, remova `--arg=--save` e acrescente `--no-write`.
+### Conjunto de dados e análise inicial
 
-`--report` salva no host o mesmo JSON exibido em stdout, inclusive em falhas do
-script e timeout, independentemente de `--no-write`. Todos os destinos JSON
-precisam ser novos e suas pastas devem existir. Um relatório existente impede
-a execução. Erros que impedem o início da sandbox são exibidos em stderr.
-`run` e `security` retornam 0 em sucesso, 1 em falha da tarefa/ensaio e 2 em erro
-de ambiente ou argumentos. Os demais comandos retornam 0 quando concluídos e
-2 em erro operacional; o argparse usa 2 para erros de sintaxe da CLI.
+Uma **tarefa** é um programa com sua entrada definida. Criamos 32 tarefas autorais, com oito variações de tamanho em cada um dos quatro tipos abaixo. Cada tarefa foi executada duas vezes, totalizando **64 medições de referência**.
 
-## ML inicial
+| Tipo de tarefa | Atividade | Treino | Teste |
+|---|---|---:|---:|
+| Alocação | Criar blocos de memória. | 6 | 2 |
+| Cálculo | Realizar operações numéricas. | 6 | 2 |
+| Leitura | Ler arquivos de texto. | 6 | 2 |
+| Escrita | Gravar arquivos. | 6 | 2 |
+| **Total** | | **24** | **8** |
 
-O modelo incluído já foi treinado com medições reais:
+A coleta foi local, na sandbox, com limites de referência de 256 MiB de memória virtual e 5 s de tempo decorrido. O alvo de cada tarefa é o maior valor medido de cada recurso nas duas execuções. Os quatro tipos aparecem tanto no treino quanto no teste. Os códigos, entradas e medições estão no [conjunto de dados](data/initial-measurements.json).
 
-```bash
-sentinela run examples/uppercase.py --input examples/entrada.txt \
-  --output demo-ml --method ml --model models/initial-tree.json
-```
+### Modelos e infraestrutura
 
-As mesmas opções `--method ml --model ...` funcionam em `plan`.
-O modelo é obrigatório; não há troca automática para heurística.
-Para coletar, treinar e avaliar outro modelo:
+O protótipo utiliza Python 3.11 ou superior, Linux, Bubblewrap e scikit-learn.
 
-```bash
-sentinela collect --output data/new-measurements.json
-sentinela train --data data/new-measurements.json --output models/new-tree.json
-sentinela evaluate --data data/new-measurements.json \
-  --model models/new-tree.json --output reports/new-replay.json
-```
+| Método | Como recomenda recursos |
+|---|---|
+| Fixo | Perfil constante de 128 MiB de memória virtual e 2 s. |
+| Heurística | Regras sobre o código e o tamanho da entrada. |
+| ML | Árvore de decisão de regressão treinada com o consumo medido. |
 
-A coleta executa 32 tarefas duas vezes. O treino usa 24 tarefas; a avaliação
-compara os três métodos nas outras 8, verificando stdout e arquivos exportados.
-No piloto incluído, todos concluíram 8/8. O limite médio foi 128 MiB no fixo,
-35 MiB na heurística e 42,25 MiB no ML, sem vantagem sobre a heurística.
-São variantes das mesmas quatro famílias, não evidência de generalização.
+A árvore (`DecisionTreeRegressor`) recebe 11 características, como tamanhos do código e da entrada e quantidade de laços e chamadas. Ela aprende condições que agrupam exemplos para estimar pico de memória virtual e tempo decorrido. A profundidade máxima é 4, e somente as tarefas de treino ajustam o modelo.
 
-[Protocolo e resultados](docs/ML_INICIAL.md) ·
-[Dados](data/initial-measurements.json) · [Modelo](models/initial-tree.json) ·
-[Reexecução](reports/initial-replay.json).
+As previsões recebem margens e passam pela política de autorização, que aplica os tetos do operador. As permissões de leitura e escrita são identificadas por análise estática, sem aprendizagem. O treinamento está explicado em [ML inicial](docs/ML_INICIAL.md); os comandos e controles do executor estão no [guia técnico](docs/GUIA_TECNICO.md).
 
-## Validação
+### Métricas e fluxograma
 
-```bash
-python -m pytest -q
-SENTINELA_INTEGRATION=1 python -m pytest -q
-sentinela security --output security-report.json
-```
+Com o modelo fixo, cada tarefa de teste foi reexecutada uma vez por método: **24 reexecuções de avaliação**. Uma execução correta termina sem erro ou timeout e produz as saídas esperadas no terminal e nos arquivos.
 
-A primeira execução testa sem namespaces; a segunda inclui a integração real.
-`security` executa nove ensaios: tarefa legítima, escrita na entrada, caminho do
-host, rede, permissões de entrada/saída, memória, timeout e tamanho de arquivo.
-Cada recusa deve apresentar o erro esperado, não apenas uma falha genérica.
+Comparamos correção, limite configurado de memória virtual, tempo decorrido, tempo de CPU e pico de RAM. Também calculamos o erro das previsões e sua cobertura das medições de referência.
 
-## Limites
+![Coleta, treinamento, recomendação, autorização e execução](docs/figures/fluxograma.png)
 
-RLIMIT_AS limita espaço virtual por processo, não RAM física agregada. Também
-são aplicados RLIMIT_CPU, RLIMIT_FSIZE, RLIMIT_NOFILE e timeout de parede.
-O protótipo não controla recursos agregados por cgroup nem implementa uma
-política seccomp específica. As medições internas podem ser adulteradas por
-código adversarial. Os ensaios controlados não certificam proteção contra
-escapes ou ataques ao kernel; este protótipo não se destina a executar código
-hostil como serviço público.
+*Figura 1 — Fluxo do experimento. Fonte: elaboração da equipe.*
 
-O código está em `src/`, os testes em `tests/`, os exemplos em `examples/` e os
-artefatos experimentais em `data/`, `models/` e `reports/`.
+### Planejamento para as próximas semanas
+
+| Semana | Atividade e entrega prevista |
+|---|---|
+| 3 | Ampliar os dados e separar tipos de tarefa entre treino, validação e teste. |
+| 4 | Calibrar margens e comparar modelos com fixo e heurística; selecionar a configuração na validação. |
+| 5 | Avaliar tipos de tarefa reservados e consolidar resultados e instruções de reprodução. |
+
+## Resultados
+
+### Funcionamento do protótipo
+
+O executor, a coleta, o treinamento e a avaliação estão integrados. Na validação local registrada para esta entrega, passaram os 35 testes da suíte, incluindo nove ensaios funcionais de contenção. A instalação também foi verificada com execução usando o modelo, argumentos, exportação de arquivo e relatório JSON.
+
+### Comparação dos métodos
+
+| Método | Tarefas corretas | Limite médio de memória virtual (MiB) |
+|---|---:|---:|
+| Fixo | 8/8 | 128 |
+| Heurística | 8/8 | 35 |
+| ML | 8/8 | 42,25 |
+
+*Tabela 1 — Resultados nas oito tarefas de teste. Fonte: [relatório de avaliação](reports/initial-replay.json).*
+
+A heurística recomendou o menor limite médio. Antes das margens, o erro absoluto médio do ML foi de aproximadamente 0,94 MiB e 0,0094 s. Os limites dos três métodos cobriram as medições de referência.
+
+### Tempos e consumo medidos
+
+| Método | Tempo decorrido (ms) | Tempo de CPU (ms) | Pico médio de RAM (MiB) |
+|---|---:|---:|---:|
+| Fixo | 49,73 | 48,27 | 12,24 |
+| Heurística | 51,16 | 49,49 | 12,28 |
+| ML | 49,18 | 47,60 | 12,35 |
+
+*Tabela 2 — Médias das oito tarefas de cada método. Na memória, calculamos a média dos picos por execução. Fonte: [relatório de avaliação](reports/initial-replay.json).*
+
+O **limite de memória virtual** é um teto configurado, enquanto o **pico de RAM** é o maior uso de memória residente observado por processo. O **tempo decorrido** inclui esperas; o **tempo de CPU** representa o processamento consumido. O tempo medido não inclui o planejamento nem a preparação completa da sandbox. Os detalhes estão no [guia de métricas](docs/GUIA_TECNICO.md#leitura-das-métricas).
+
+## Discussão
+
+Os limites recomendados foram diferentes, mas os tempos e picos de RAM ficaram próximos. Portanto, limites menores não demonstraram menor consumo observado. Como houve apenas uma reexecução por método e tarefa, pequenas diferenças não sustentam uma conclusão de ganho de desempenho.
+
+O conjunto é pequeno, compartilha tipos de tarefa entre treino e teste e não possui validação separada. A máquina e sua carga também influenciam as medições. A avaliação ampliada precisa verificar essas condições antes de justificar o uso do ML em outros cenários.
+
+Os controles e as medições são por processo, sem representar RAM agregada da sandbox. Os ensaios locais verificam casos controlados e não certificam segurança para execução pública de código hostil; os limites operacionais estão no [guia técnico](docs/GUIA_TECNICO.md#limites).
+
+## Conclusão
+
+O piloto confirmou o funcionamento do fluxo, mas ainda não justifica preferir o ML à heurística. As semanas 3 a 5 ampliarão os dados, a seleção por validação e a avaliação em tipos de tarefa reservados.
+
+## Referências
+
+SALTZER, Jerome H.; SCHROEDER, Michael D. The protection of information in computer systems. Proceedings of the IEEE, v. 63, n. 9, p. 1278-1308, 1975. DOI: 10.1109/PROC.1975.9939. Disponível em: https://www.cs.virginia.edu/~evans/cs551/saltzer/. Acesso em: 2 nov. 2026.
+
+KWON, Yongin et al. Mantis: Automatic Performance Prediction for Smartphone Applications. In: USENIX ANNUAL TECHNICAL CONFERENCE, 2013, San Jose. Proceedings of the 2013 USENIX Annual Technical Conference. Berkeley: USENIX Association, 2013. p. 297-308. Disponível em: https://www.usenix.org/conference/atc13/technical-sessions/presentation/kwon. Acesso em: 2 nov. 2026.
+
+PEDREGOSA, Fabian et al. Scikit-learn: machine learning in Python. Journal of Machine Learning Research, v. 12, n. 85, p. 2825-2830, 2011. Disponível em: https://www.jmlr.org/papers/v12/pedregosa11a.html. Acesso em: 2 nov. 2026.
+
+SCIKIT-LEARN DEVELOPERS. DecisionTreeRegressor. Scikit-learn documentation. [S. l.], [s. d.]. Disponível em: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html. Acesso em: 2 nov. 2026.
+
+SCIKIT-LEARN DEVELOPERS. Common pitfalls and recommended practices. Scikit-learn documentation. [S. l.], [s. d.]. Disponível em: https://scikit-learn.org/stable/common_pitfalls.html. Acesso em: 2 nov. 2026.
+
+CONTAINERS PROJECT. Bubblewrap. GitHub, [s. d.]. Disponível em: https://github.com/containers/bubblewrap. Acesso em: 2 nov. 2026.
+
+LINUX MAN-PAGES PROJECT. getrlimit(2): get/set resource limits. [S. l.], [s. d.]. Disponível em: https://www.man7.org/linux/man-pages/man2/getrlimit.2.html. Acesso em: 2 nov. 2026.
+
+INF0336 OPERATING SYSTEMS. Modelo de relatório do seminário. GitHub, 2026. Disponível em: https://github.com/2026-2-INF0336-OperatingSystems/assets/blob/main/README.md. Acesso em: 2 nov. 2026.

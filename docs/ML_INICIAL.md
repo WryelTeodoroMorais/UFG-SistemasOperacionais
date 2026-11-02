@@ -1,88 +1,94 @@
-# ML inicial: protocolo, uso e resultados
+# ML inicial: técnica, treinamento e resultados
 
-## Modelo e fronteira de autorização
+## Qual técnica está sendo usada?
 
-O primeiro modelo aprende dois valores: pico de espaço virtual em MiB e duração
-de parede em segundos. O treinamento usa
-[DecisionTreeRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html),
-com profundidade máxima 4, pelo menos 2 amostras por folha e semente 336.
-Os dois alvos são transformados por `log1p` antes do ajuste. Esses parâmetros
-foram fixados antes da avaliação; não houve busca de hiperparâmetros no teste.
+Usamos **aprendizado supervisionado com uma árvore de decisão de regressão**,
+implementada pelo
+[DecisionTreeRegressor do scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html).
 
-As 11 features são tamanho da entrada e do código, contagens de nós AST,
-chamadas, laços, compreensões, imports, leituras, escritas e alocações, além do
-maior literal numérico. Identificador, família, partição, medições e saídas não
-entram no modelo. Os argumentos de execução também não são usados.
+É supervisionado porque o treino recebe exemplos com consumo já medido.
+É regressão porque prevê valores numéricos: **pico de memória virtual, em MiB,
+e tempo decorrido, em segundos**. Uma única árvore prevê os dois valores;
+o modelo não prevê diretamente o consumo de RAM.
 
-A árvore é exportada em JSON: não há carregamento de pickle ou joblib.
-A inferência valida o esquema, as features e os nós, rejeitando valores não
-finitos e referências cíclicas. Ela pode ser feita sem importar scikit-learn;
-a biblioteca é necessária para treinar. O caminho do modelo é explícito.
+A árvore aprende condições sobre as características dos programas, separando
+os exemplos em grupos. Para uma nova tarefa, percorre essas condições até
+uma folha, que fornece as duas estimativas. Essas condições são aprendidas
+com os dados, em vez de serem escritas manualmente como na heurística.
 
-As recomendações adicionam margens fixas: `ceil(memória * 1,5 + 8)` MiB e
-`tempo * 2 + 0,15` s. A política `authorize()` aplica os tetos e as permissões
-do operador depois dessas margens. Leitura e escrita continuam determinadas
-por AST, não por um classificador treinado. Uma previsão maior não amplia a
-autoridade. Não há escalada de recursos nem troca automática de método após falha.
+## Como o modelo é treinado?
 
-## Dados e reprodução
+1. **Coletar exemplos.** O comando `collect` executa 32 tarefas autorais,
+   divididas em alocação de memória, cálculo, leitura e escrita. Cada tipo tem
+   oito variações de tamanho, e cada tarefa é executada duas vezes na sandbox:
+   são 64 medições de referência.
+2. **Preparar as entradas e os valores esperados.** Para cada tarefa, extraímos
+   11 características do código e da entrada, incluindo tamanhos, estrutura
+   sintática, chamadas e laços. Os valores que o modelo deve aprender são o
+   maior pico de memória virtual e o maior tempo decorrido das duas medições.
+   Assim, as duas execuções formam **um exemplo por tarefa**.
+3. **Separar treino e teste.** Usamos 24 tarefas no ajuste e reservamos oito
+   para teste: as variações de índice 2 e 6 de cada tipo. As tarefas de teste
+   não ajustam a árvore. Identificador, tipo de tarefa, saídas e medições não
+   entram como características; os argumentos do script também não entram.
+4. **Ajustar a árvore.** O comando `train` usa as características das tarefas
+   de treino e seus consumos medidos. Antes do ajuste, aplica `log1p` aos dois
+   valores esperados para reduzir diferenças de escala. A árvore é limitada
+   a profundidade 4, com pelo menos duas tarefas por folha e semente 336.
+   Esses parâmetros foram fixados antes da avaliação.
+5. **Salvar e avaliar.** A árvore é exportada em JSON, com previsões convertidas
+   de volta às unidades originais. Mantemos o modelo fixo e reexecutamos as
+   oito tarefas de teste com os métodos fixo, heurístico e ML, uma vez por método.
 
-`collect` cria 32 tarefas determinísticas em quatro famílias: alocação de
-bytearray, cálculo, leitura de texto e escrita de arquivo. Cada tarefa é
-executada duas vezes com limites de referência de 256 MiB, 5 s de parede,
-3 s de CPU e 4 MiB por arquivo de saída. A coleta precisa passar pelo `doctor`.
-Só medições com retorno zero, sem timeout e com pico virtual positivo entram
-no dataset; as saídas das duas repetições devem coincidir.
+`train` usa as medições salvas e não executa os scripts novamente. `collect`
+e `evaluate` executam as tarefas na sandbox. O JSON permite fazer previsões
+sem carregar pickle ou joblib; o scikit-learn é necessário para o treinamento.
 
-Das oito variantes por família, os índices 2 e 6 são reservados para teste.
-Há 24 tarefas de treino e 8 de teste, com variantes das mesmas famílias em
-ambas as partições. O alvo de cada tarefa é o máximo das duas medições de cada
-recurso. Essa pequena coleta serve para demonstrar o pipeline, não para estimar
-desempenho em famílias inéditas ou tarefas de agentes reais.
+## Como a previsão é usada?
 
-O dataset JSON guarda código, texto de entrada, partição e medições completas.
-`train` recalcula as features, ignora cópias pré-calculadas em datasets antigos,
-recusa tarefas duplicadas e não ajusta a árvore com rótulos do teste.
-Datasets externos devem seguir `sentinela-measurements-v1`, com a mesma estrutura
-do arquivo incluído. O operador responde pela origem e veracidade dos dados;
-a validação estrutural não atesta que uma medição externa foi realizada.
+Antes da execução, adicionamos margens fixas às estimativas:
 
-Os comandos de reprodução estão no [README](../README.md#ml-inicial).
-`train` não executa os scripts; `collect` e `evaluate` usam a sandbox.
-`evaluate` exige que o SHA-256 do dataset
-corresponda ao registrado no modelo. O comando reexecuta somente as tarefas
-reservadas, uma vez por método, em ordem embaralhada com semente 336. Sucesso
-exige retorno zero, ausência de timeout, stdout igual e mesmos nomes, tamanhos
-e hashes de arquivos exportados. O processo termina normalmente quando a
-avaliação é concluída; as falhas de tarefas ficam registradas em `correct`.
+- Memória virtual: `ceil(memória prevista × 1,5 + 8)` MiB.
+- Tempo decorrido: `tempo previsto × 2 + 0,15` s.
 
-## Piloto medido em 02/11/2026
+Depois, a política `authorize()` aplica os tetos e as permissões do operador.
+O modelo recomenda recursos; não concede acessos. Leitura e escrita continuam
+identificadas por análise estática do código. Não há aumento automático de
+recursos nem troca de método após uma falha.
 
-Artefatos: [dataset](../data/initial-measurements.json),
-[modelo e métricas de predição](../models/initial-tree.json) e
-[reexecução completa](../reports/initial-replay.json). O modelo guarda versão
-do scikit-learn, parâmetros, instante de treino e SHA-256 dos dados. As medições
-guardam seu instante de coleta e a plataforma real.
+Os comandos de coleta, treino e avaliação estão no
+[guia técnico](GUIA_TECNICO.md#ml-inicial).
 
-No teste, o erro absoluto médio da previsão sem margens foi aproximadamente
-0,94 MiB de espaço virtual e 0,0094 s de duração. As margens dos três métodos
-cobriram as medições de referência de todas as oito tarefas. Essa cobertura
-é uma comparação numérica, distinta da reexecução abaixo.
+## Resultados do piloto
 
-| Método | Reexecuções corretas | Limite médio de memória virtual |
+Artefatos: [dados](../data/initial-measurements.json),
+[modelo treinado](../models/initial-tree.json) e
+[relatório de avaliação](../reports/initial-replay.json).
+
+| Método | Tarefas corretas | Limite médio de memória virtual (MiB) |
 |---|---:|---:|
-| Fixo | 8/8 | 128 MiB |
-| Heurística | 8/8 | 35 MiB |
-| ML | 8/8 | 42,25 MiB |
+| Fixo | 8/8 | 128 |
+| Heurística | 8/8 | 35 |
+| ML | 8/8 | 42,25 |
 
-O ML funciona neste piloto, mas não supera a heurística no limite médio.
-As durações observadas foram próximas de 0,05 s, sem repetições suficientes
-para afirmar ganho temporal. Limite de espaço virtual não é consumo de RAM
-física nem reserva de memória. A amostragem de `/proc` pode perder picos curtos,
-e as medições dependem da máquina e da carga.
+Uma tarefa correta termina sem erro ou timeout e produz a mesma saída esperada
+no terminal e nos arquivos. O erro absoluto médio das previsões sem margens
+foi de aproximadamente 0,94 MiB e 0,0094 s. Os limites dos três métodos cobriram
+as medições de referência das oito tarefas.
 
-O conjunto é pequeno e autoral, sem conjunto de validação separado. As margens
-são conservadoras e fixas. Antes de justificar uso mais amplo, faltam famílias
-reservadas, tarefas reais, validação de margens, mais repetições e tratamento
-de mudanças de ambiente. Nenhum desses resultados certifica a sandbox para
-execução pública de código hostil.
+**O ML funcionou no piloto, mas não superou a heurística no limite recomendado.**
+Os tempos médios ficaram próximos de 50 ms e o pico médio de RAM próximo de
+12,3 MiB nos três métodos. As medições de execução estão detalhadas no
+[README](../README.md#tempos-e-consumo-medidos).
+
+## Limitações
+
+O conjunto é pequeno, e os mesmos quatro tipos de tarefa aparecem no treino
+e no teste. Não há validação separada para escolher modelos ou calibrar
+margens. Uma reexecução por método e tarefa também não é suficiente para
+concluir ganho de desempenho a partir de pequenas diferenças.
+
+Limite de memória virtual não é consumo de RAM. As medições dependem da
+máquina e da carga, e a amostragem pode perder picos curtos. A próxima avaliação
+precisa de mais tarefas, tipos ausentes do treino e medições repetidas.
+Os resultados não certificam segurança para execução pública de código hostil.
