@@ -13,6 +13,7 @@ from artifacts import check_destination, write_json
 from policy import Budget, authorize
 from recommendation import recommend
 from sandbox import doctor, run
+from security import verify
 
 
 def _script(path: Path) -> str:
@@ -57,6 +58,8 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status", help="Exibe o nome e a versão do pacote")
     sub.add_parser("doctor", help="Verifica Bubblewrap e executa uma prova inofensiva de isolamento")
+    security = sub.add_parser("security", help="Executa nove ensaios funcionais de contenção")
+    security.add_argument("--output", type=Path, help="Salva o relatório JSON em um arquivo novo")
     def add_limits(command):
         command.add_argument("--max-memory-mb", type=int, default=256)
         command.add_argument("--max-wall-seconds", type=float, default=5.0)
@@ -83,9 +86,15 @@ def main(argv=None):
     try:
         if args.command == "status":
             result = {"name": "Sentinela ML", "version": __version__,
-                      "capabilities": ["status", "doctor", "plan", "run"]}
+                      "capabilities": ["status", "doctor", "plan", "run", "security"]}
         elif args.command == "doctor":
             result = doctor()
+        elif args.command == "security":
+            if args.output:
+                check_destination(args.output)
+            result = verify()
+            if args.output:
+                write_json(args.output, result)
         else:
             executing = args.command == "run"
             if executing and args.report:
