@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sentinela-ml"
 version = "0.1.0"
-description = "Planejamento heurístico e execução isolada de scripts Python"
+description = "Planejamento heurístico ou aprendido e execução isolada de scripts Python"
 requires-python = ">=3.11"
 dependencies = ["scikit-learn>=1.4,<2", "numpy>=1.26,<3"]
 
@@ -17,7 +17,7 @@ sentinela = "cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["artifacts", "cli", "features", "policy", "recommendation", "sandbox", "security", "supervisor"]
+py-modules = ["artifacts", "cli", "features", "learning", "ml_data", "policy", "recommendation", "sandbox", "security", "supervisor"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
