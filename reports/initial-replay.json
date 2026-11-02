@@ -1,0 +1,658 @@
+{
+  "created_at": "2026-11-02T12:08:46.376674+00:00",
+  "model_sha256": "a93c9097e983f35313df5dd5b0f745d45cbda98b396cecdd539dc4b54534c1f4",
+  "dataset_sha256": "a7a4c42910884363b2adbbf66404950c254ddf55ecb74ea5ca5dbde256fbaf30",
+  "summary": {
+    "fixed": {
+      "correct": 8,
+      "tasks": 8,
+      "mean_memory_limit_mb": 128.0,
+      "mean_wall_seconds": 0.04973211662502308
+    },
+    "heuristic": {
+      "correct": 8,
+      "tasks": 8,
+      "mean_memory_limit_mb": 35.0,
+      "mean_wall_seconds": 0.05116331212514069
+    },
+    "ml": {
+      "correct": 8,
+      "tasks": 8,
+      "mean_memory_limit_mb": 42.25,
+      "mean_wall_seconds": 0.049177701999838064
+    }
+  },
+  "results": [
+    {
+      "task": "allocate-2",
+      "family": "allocate",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.06373723199976666,
+        "cpu_seconds": 0.060213,
+        "peak_rss_mb": 12.6796875,
+        "peak_vms_mb": 23.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 38,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "allocate-2",
+      "family": "allocate",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.04129770799954713,
+        "cpu_seconds": 0.038842,
+        "peak_rss_mb": 12.8984375,
+        "peak_vms_mb": 23.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 47,
+          "wall_seconds": 0.27475224928320874,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "allocate-2",
+      "family": "allocate",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.04428402999928949,
+        "cpu_seconds": 0.042606,
+        "peak_rss_mb": 12.90234375,
+        "peak_vms_mb": 23.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "compute-2",
+      "family": "compute",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.04315672099983203,
+        "cpu_seconds": 0.041681,
+        "peak_rss_mb": 9.828125,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "8999955000050000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 39,
+          "wall_seconds": 0.2762301799546939,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "compute-2",
+      "family": "compute",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.04126046100009262,
+        "cpu_seconds": 0.039818,
+        "peak_rss_mb": 9.9609375,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "8999955000050000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 36,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "compute-2",
+      "family": "compute",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.040762119000646635,
+        "cpu_seconds": 0.039716999999999995,
+        "peak_rss_mb": 9.8984375,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "8999955000050000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "read-2",
+      "family": "read",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03454342100030772,
+        "cpu_seconds": 0.033871,
+        "peak_rss_mb": 11.41015625,
+        "peak_vms_mb": 21.93359375,
+        "stdout": "15360\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 33,
+          "wall_seconds": 0.4029296875,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "read-2",
+      "family": "read",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03657065399966086,
+        "cpu_seconds": 0.034180999999999996,
+        "peak_rss_mb": 11.125,
+        "peak_vms_mb": 21.93359375,
+        "stdout": "15360\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "read-2",
+      "family": "read",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.04185817399957159,
+        "cpu_seconds": 0.039037,
+        "peak_rss_mb": 11.40625,
+        "peak_vms_mb": 21.93359375,
+        "stdout": "15360\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 41,
+          "wall_seconds": 0.22187083878352243,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "write-2",
+      "family": "write",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03498444499928155,
+        "cpu_seconds": 0.034088999999999994,
+        "peak_rss_mb": 11.54296875,
+        "peak_vms_mb": 21.98046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 98304,
+            "sha256": "78d21e8af9e9196e8c3cfa632b9933789107871135166ef811a087a0bc267cad"
+          }
+        },
+        "budget": {
+          "memory_mb": 42,
+          "wall_seconds": 0.22677305716488694,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "write-2",
+      "family": "write",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.038972448999629705,
+        "cpu_seconds": 0.037961999999999996,
+        "peak_rss_mb": 11.4375,
+        "peak_vms_mb": 21.98046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 98304,
+            "sha256": "78d21e8af9e9196e8c3cfa632b9933789107871135166ef811a087a0bc267cad"
+          }
+        },
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "write-2",
+      "family": "write",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.034909353999864834,
+        "cpu_seconds": 0.033178,
+        "peak_rss_mb": 11.41796875,
+        "peak_vms_mb": 21.98046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 98304,
+            "sha256": "78d21e8af9e9196e8c3cfa632b9933789107871135166ef811a087a0bc267cad"
+          }
+        },
+        "budget": {
+          "memory_mb": 33,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "allocate-6",
+      "family": "allocate",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.07802899099988281,
+        "cpu_seconds": 0.077394,
+        "peak_rss_mb": 19.86328125,
+        "peak_vms_mb": 30.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "allocate-6",
+      "family": "allocate",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.08121129100072721,
+        "cpu_seconds": 0.07960199999999999,
+        "peak_rss_mb": 19.83203125,
+        "peak_vms_mb": 30.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 47,
+          "wall_seconds": 0.27475224928320874,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "allocate-6",
+      "family": "allocate",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.08236074600063148,
+        "cpu_seconds": 0.079836,
+        "peak_rss_mb": 19.67578125,
+        "peak_vms_mb": 30.4921875,
+        "stdout": "0\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 38,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "compute-6",
+      "family": "compute",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.08102691800013417,
+        "cpu_seconds": 0.0802,
+        "peak_rss_mb": 10.01953125,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "333332833333500000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 39,
+          "wall_seconds": 0.2762301799546939,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "compute-6",
+      "family": "compute",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.08389537799939717,
+        "cpu_seconds": 0.082374,
+        "peak_rss_mb": 9.828125,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "333332833333500000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 36,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "compute-6",
+      "family": "compute",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.08439918000021862,
+        "cpu_seconds": 0.08280799999999999,
+        "peak_rss_mb": 9.8125,
+        "peak_vms_mb": 20.48828125,
+        "stdout": "333332833333500000\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "read-6",
+      "family": "read",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.034890872999312705,
+        "cpu_seconds": 0.034097999999999996,
+        "peak_rss_mb": 11.32421875,
+        "peak_vms_mb": 21.98828125,
+        "stdout": "51200\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 41,
+          "wall_seconds": 0.2274016234012356,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "read-6",
+      "family": "read",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03378667700053484,
+        "cpu_seconds": 0.032733,
+        "peak_rss_mb": 11.40234375,
+        "peak_vms_mb": 21.98828125,
+        "stdout": "51200\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 33,
+          "wall_seconds": 0.409765625,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": false
+        }
+      }
+    },
+    {
+      "task": "read-6",
+      "family": "read",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03742062000037549,
+        "cpu_seconds": 0.036009,
+        "peak_rss_mb": 11.109375,
+        "peak_vms_mb": 21.98828125,
+        "stdout": "51200\n",
+        "stderr": "",
+        "outputs": {},
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": true,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "write-6",
+      "family": "write",
+      "method": "fixed",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.03741889000048104,
+        "cpu_seconds": 0.035485,
+        "peak_rss_mb": 11.75,
+        "peak_vms_mb": 22.48046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 327680,
+            "sha256": "4e1fbfd6fc4d57b832d8bfc4ff005c91f67670c5d5305aedd17fc67fd12f6d24"
+          }
+        },
+        "budget": {
+          "memory_mb": 128,
+          "wall_seconds": 2.0,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "write-6",
+      "family": "write",
+      "method": "ml",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.034995486000298115,
+        "cpu_seconds": 0.033218,
+        "peak_rss_mb": 11.92578125,
+        "peak_vms_mb": 22.48046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 327680,
+            "sha256": "4e1fbfd6fc4d57b832d8bfc4ff005c91f67670c5d5305aedd17fc67fd12f6d24"
+          }
+        },
+        "budget": {
+          "memory_mb": 42,
+          "wall_seconds": 0.22677305716488694,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    },
+    {
+      "task": "write-6",
+      "family": "write",
+      "method": "heuristic",
+      "correct": true,
+      "execution": {
+        "returncode": 0,
+        "timed_out": false,
+        "wall_seconds": 0.034813228000530216,
+        "cpu_seconds": 0.033933,
+        "peak_rss_mb": 11.83984375,
+        "peak_vms_mb": 22.48046875,
+        "stdout": "ok\n",
+        "stderr": "",
+        "outputs": {
+          "data.txt": {
+            "bytes": 327680,
+            "sha256": "4e1fbfd6fc4d57b832d8bfc4ff005c91f67670c5d5305aedd17fc67fd12f6d24"
+          }
+        },
+        "budget": {
+          "memory_mb": 33,
+          "wall_seconds": 0.33999999999999997,
+          "cpu_seconds": 3,
+          "output_mb": 4,
+          "read_input": false,
+          "write_output": true
+        }
+      }
+    }
+  ],
+  "scope": "Um replay por método e tarefa reservada; ordem embaralhada com semente 336. Limite configurado não é consumo de RAM; não demonstra superioridade geral."
+}
