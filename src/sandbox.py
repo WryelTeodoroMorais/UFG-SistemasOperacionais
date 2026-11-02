@@ -16,7 +16,15 @@ class SandboxUnavailable(RuntimeError):
 
 
 def run(code: str, input_data: bytes = b"", budget: Budget | None = None,
-        destination: Path | None = None, *, input_path: Path | None = None) -> dict:
+        destination: Path | None = None, *, input_path: Path | None = None,
+        script_args: list[str] | None = None) -> dict:
+    if script_args is None:
+        script_args = []
+    if (not isinstance(script_args, list)
+            or any(not isinstance(arg, str) or "\0" in arg for arg in script_args)):
+        raise ValueError("Argumentos do script devem ser uma lista de strings sem NUL")
+    if len(script_args) > 128 or sum(len(arg.encode()) for arg in script_args) > 32_000:
+        raise ValueError("Máximo de 128 argumentos e 32 kB no total")
     budget = budget or Budget()
     bwrap = shutil.which("bwrap")
     if not bwrap:
@@ -32,7 +40,7 @@ def run(code: str, input_data: bytes = b"", budget: Budget | None = None,
             p.mkdir()
         (app / "task.py").write_text(code)
         (app / "supervisor.py").write_text(Path(__file__).with_name("supervisor.py").read_text())
-        (app / "settings.json").write_text(json.dumps(budget.to_dict()))
+        (app / "settings.json").write_text(json.dumps({**budget.to_dict(), "script_args": script_args}))
         if input_path is None:
             (inputs / "data.txt").write_bytes(input_data)
         else:

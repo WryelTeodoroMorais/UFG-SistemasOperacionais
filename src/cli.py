@@ -9,6 +9,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0.1.0"
 
+from artifacts import check_destination, write_json
 from policy import Budget, authorize
 from recommendation import recommend
 from sandbox import doctor, run
@@ -56,7 +57,6 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status", help="Exibe o nome e a versão do pacote")
     sub.add_parser("doctor", help="Verifica Bubblewrap e executa uma prova inofensiva de isolamento")
-
     def add_limits(command):
         command.add_argument("--max-memory-mb", type=int, default=256)
         command.add_argument("--max-wall-seconds", type=float, default=5.0)
@@ -73,6 +73,9 @@ def main(argv=None):
     execute.add_argument("script", type=Path)
     execute.add_argument("--input", type=Path)
     execute.add_argument("--output", type=Path, required=True)
+    execute.add_argument("--arg", action="append", default=[], help="Argumento do script; pode ser repetido (use --arg=--opcao para opções)")
+    execute.add_argument("--no-write", action="store_true", help="Bloqueia escrita em /output, inclusive no perfil fixo")
+    execute.add_argument("--report", type=Path, help="Salva o resultado JSON em um arquivo novo no host")
     execute.add_argument("--method", choices=("fixed", "heuristic"), default="heuristic")
     add_limits(execute)
 
@@ -83,22 +86,24 @@ def main(argv=None):
                       "capabilities": ["status", "doctor", "plan", "run"]}
         elif args.command == "doctor":
             result = doctor()
-        elif args.command == "plan":
+        else:
+            executing = args.command == "run"
+            if executing and args.report:
+                check_destination(args.report)
             code = _script(args.script)
             input_bytes = _input_size(args.input)
             ceiling = _ceiling(args, read_input=args.input is not None,
-                               write_output=args.allow_write)
-            result = {"script": str(args.script), **recommend(code, input_bytes, ceiling)}
-        else:
-            code = _script(args.script)
-            input_bytes = _input_size(args.input)
-            ceiling = _ceiling(args, read_input=args.input is not None, write_output=True)
-            profile = _recommendation_for(args, code, input_bytes, ceiling)
-            budget = Budget(**profile["authorized_budget"])
-            measured = run(code, budget=budget, destination=args.output,
-                           input_path=args.input)
-            result = {"script": str(args.script), "method": profile["method"],
-                      "profile": profile, "execution": measured}
+                               write_output=not args.no_write if executing else args.allow_write)
+            recommendation = _recommendation_for(args, code, input_bytes, ceiling) if executing else recommend(code, input_bytes, ceiling)
+            if executing:
+                measured = run(code, budget=Budget(**recommendation["authorized_budget"]),
+                               destination=args.output, input_path=args.input, script_args=args.arg)
+                result = {"script": str(args.script), "method": args.method, "script_args": args.arg,
+                          "profile": recommendation, "execution": measured}
+                if args.report:
+                    write_json(args.report, result)
+            else:
+                result = {"script": str(args.script), **recommendation}
         print(json.dumps(result, indent=2, ensure_ascii=False))
         if args.command == "run" and (result["execution"].get("timed_out")
                                       or result["execution"].get("returncode") != 0):
