@@ -55,8 +55,6 @@ Ganhos do auto atual nesse lote:
 - Contra Sempre memória: 28.16% menos tempo e 81.61% menor média de picos RSS.
 - Contra Sempre blocos: 76.69% menos tempo e 23.71% menor média de picos RSS.
 
-O seletor histórico `auto-v1` foi retirado da CLI. No mesmo lote, levou 1.5539 s e teve RSS médio de 32.420 MiB, contra 0.4789 s e 11.619 MiB do `auto` atual. O seletor antigo levou cerca de 3.2 vezes o tempo e 2.8 vezes o RSS médio. Essa comparação representa seis tarefas lógicas em CSVs sintéticos, numa máquina; não prova desempenho universal.
-
 ## Justificativa e conclusão
 
 Há uma justificativa operacional concreta: reduzir leitura, conversão e cálculo repetidos em agregações conhecidas, preservando os resultados e o isolamento. O ganho é medido em tempo e RAM efetivos. Para essa operação, não houve justificativa de produção para ML; a política usa a referência eficiente e evita custo estatístico desnecessário. O estudo supervisionado continua relevante como avaliação comparativa, inclusive por permitir essa conclusão negativa.

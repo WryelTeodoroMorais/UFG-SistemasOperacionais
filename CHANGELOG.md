@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-Versão inicial que consolida as duas primeiras semanas:
+Versão inicial do projeto:
 
 - Política determinística de recursos e permissões, com rejeição de recomendações inválidas.
 - Planejamento heurístico por AST e tamanho da entrada.

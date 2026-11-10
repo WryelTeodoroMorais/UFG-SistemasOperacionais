@@ -64,10 +64,6 @@ for baseline in ('memory','blocks','heuristic'):
     text+=f"- Contra {names[baseline]}: {time_gain:.2f}% menos tempo e {rss_gain:.2f}% menor média de picos RSS.\n"
 text+='''
 
-### Seletor antigo removido
-
-No lote de demonstração registrado antes da retirada, o seletor `auto-v1` levou 1,5539 s e teve RSS médio de 32,420 MiB; `auto` levou 0,4789 s e teve 11,619 MiB. O seletor antigo levou cerca de 3,2 vezes o tempo e 2,8 vezes o RSS médio nesse lote. São seis tarefas lógicas em CSVs sintéticos, numa máquina; o resultado justifica removê-lo da CLI para esse operador, sem afirmar desempenho universal.
-
 ## Justificativa e conclusão
 
 Há uma justificativa operacional concreta: reduzir leitura, conversão e cálculo repetidos em agregações conhecidas, preservando os resultados e o isolamento. O ganho é medido em tempo e RAM efetivos. Para essa operação, não houve justificativa de produção para ML; a política usa a referência eficiente e evita custo estatístico desnecessário. O estudo supervisionado continua relevante como avaliação comparativa, inclusive por permitir essa conclusão negativa.

@@ -20,8 +20,6 @@ Isso se aplica a esta operação conhecida de agregação, não a qualquer progr
 
 `auto` é o padrão recomendado: segue a política validada e usa `fused` quando nenhum modelo ML é promovido. `fused` executa a referência de uma passagem diretamente. A CLI aceita somente essas duas opções; `memory`, `blocks` e `heuristic` ficam restritas aos scripts de benchmark.
 
-O seletor histórico `auto-v1` foi retirado da CLI após perder no lote sintético comparável. Os valores e as limitações estão no [relatório](../evolution/fusion/REPORT.md).
-
 Os CSVs de benchmark são sintéticos e ficam locais, fora do Git. A fase `fit` se recusa a substituir uma rodada existente; para repetir o experimento, use uma cópia de trabalho sem `evolution/fusion/` e rode `.venv/bin/python scripts/benchmark_fusion.py --phase fit`, seguido de `--phase final`. Para experimentar a CLI em um clone, troque os caminhos abaixo por `examples/entrada.csv` ou por seus próprios arquivos.
 
 ```bash

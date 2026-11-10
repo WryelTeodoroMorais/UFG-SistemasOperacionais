@@ -1,11 +1,7 @@
 # INF0336 - Seminário
 
-Trabalho consolidado até a **semana 2**. As instruções de instalação, uso e reprodução estão no
-[guia técnico](docs/GUIA_TECNICO.md).
-
 ## Título do Seminário
-
-Sandbox e previsão de recursos com aprendizado de máquina
+Sentinela ML: recomendação supervisionada de recursos e capacidades para execução isolada de código de agentes
 
 ## Equipe
 
@@ -17,135 +13,121 @@ Sandbox e previsão de recursos com aprendizado de máquina
 | 202401799 | Lourenço Tabosa Paniago |
 
 ## Apresentações
-
-1. [Apresentação da segunda semana](docs/apresentacoes/semana-2/apresentacao-semana-2.pptx) e [versão PDF](docs/apresentacoes/semana-2/apresentacao-semana-2.pdf).
+Os materiais de apresentação e seus roteiros são mantidos localmente, separados dos arquivos versionados. A estrutura acadêmica segue o modelo INF0336 em `docs/references/INF0336-modelo.md`.
 
 ## Resumo
+Agentes capazes de executar código precisam de ambientes com recursos e acessos delimitados. O projeto mede um modelo supervisionado que recomenda limites e capacidades de leitura/escrita; uma política independente restringe cada recomendação à autorização externa. Os dados são workloads Python autorais, executados em sandbox Linux, com famílias separadas entre treino e avaliação.
 
-Este trabalho avalia recomendações de recursos para scripts Python executados em uma sandbox Linux. Comparamos um perfil fixo, regras heurísticas e uma árvore de decisão treinada com medições reais. Uma política independente restringe acessos e aplica os tetos do operador. No piloto da semana 2, os três métodos concluíram corretamente as oito tarefas de teste. A heurística recomendou o menor limite médio de memória virtual, enquanto os tempos e o consumo de RAM foram próximos. O fluxo está funcional, mas ainda não demonstra vantagem do ML.
+O treino atual reúne 2.076 registros. No conjunto reservado independente usado no refinamento, o modelo híbrido concluiu 100/100 tarefas, contra 85/100 do modelo anterior, com cobertura conjunta de recursos de 100%. O orçamento médio de memória aumentou de 38,62 para 59,54 MiB. São resultados de benchmarks controlados, não uma afirmação de segurança em produção ou de economia equivalente de memória física.
 
 ## Introdução
 
 ### Motivação
-
-Uma sandbox restringe o ambiente de execução, mas o operador ainda precisa escolher limites de recursos. Valores altos permitem consumo desnecessário; valores baixos podem interromper tarefas legítimas. Investigamos se o aprendizado de máquina ajuda a recomendar limites menores, preservando a correção das tarefas.
+Um agente que gera código pode executar operações incompatíveis com a tarefa: modificar entradas, tentar acessar rede ou ficar preso em execução. Um perfil amplo facilita a execução, mas expõe acessos desnecessários; um perfil rígido pode impedir tarefas legítimas. O projeto propõe estimar necessidades antes da execução, preservando um teto de autoridade independente da IA.
 
 ### Revisão bibliográfica
+Saltzer e Schroeder [1] fundamentam menor privilégio e mediação de acessos. A arquitetura aplica esses princípios ao separar recomendação e autorização. Geurts, Ernst e Wehenkel [2] apresentam Extra Trees, família escolhida para regressão e classificação; sua publicação não prova que esse estimador supera heurísticas no problema estudado. Pedregosa et al. [3] descrevem a biblioteca usada para construir os modelos.
 
-O menor privilégio de Saltzer e Schroeder (1975) orienta a separação entre recomendação e autorização. Kwon et al. (2013), com o Mantis, motivam o uso de características dos programas para prever desempenho, sem garantir que seus resultados se transfiram para este estudo.
-
-Pedregosa et al. (2011) e a documentação do scikit-learn fundamentam a implementação da árvore e os cuidados de avaliação. A documentação do Bubblewrap e o manual getrlimit(2) descrevem o isolamento e os limites Linux utilizados.
+Bubblewrap [4] fornece mecanismos de montagem e isolamento utilizados pelo executor. As páginas getrlimit [5] e namespaces [6] esclarecem o alcance dos controles Linux, especialmente a diferença entre limitar espaço virtual por processo e controlar memória agregada. A documentação de boas práticas do scikit-learn [7] orienta a separação de dados e a exclusão de informações posteriores à execução das features. O modelo INF0336 [8] determina a organização deste relatório.
 
 ### Objetivos
-
-- Executar scripts sob permissões e tetos definidos pelo operador.
-- Treinar um modelo para prever memória virtual e tempo decorrido.
-- Comparar suas recomendações e o consumo observado com os métodos fixo e heurístico.
+Construir uma interface de execução que um agente possa chamar; medir demandas de recursos; treinar um regressor e um classificador multirrótulo; comparar com perfil fixo e heurística; testar contenção funcional e registrar limitações. O escopo não inclui um LLM gerador completo, GPU, RL ou execução pública de código hostil.
 
 ## Metodologia
 
-### Conjunto de dados e análise inicial
+### Dados e experimentos
+O repositório contém um único conjunto de treino com 2.076 tarefas, 100 tarefas de validação e 24 do teste original. A comparação final também foi medida em 100 tarefas reservadas cujos registros brutos são locais. Cada tarefa recebe três execuções de referência. Tamanhos de entrada e sementes são determinísticos; não há coleta de usuários nem revisão humana independente. Capacidade significa ler a entrada e escrever a saída, não uma Linux capability de privilégio.
 
-Uma **tarefa** é um programa com sua entrada definida. Criamos 32 tarefas autorais, com oito variações de tamanho em cada um dos quatro tipos abaixo. Cada tarefa foi executada duas vezes, totalizando **64 medições de referência**.
-
-| Tipo de tarefa | Atividade | Treino | Teste |
-|---|---|---:|---:|
-| Alocação | Criar blocos de memória. | 6 | 2 |
-| Cálculo | Realizar operações numéricas. | 6 | 2 |
-| Leitura | Ler arquivos de texto. | 6 | 2 |
-| Escrita | Gravar arquivos. | 6 | 2 |
-| **Total** | | **24** | **8** |
-
-A coleta foi local, na sandbox, com limites de referência de 256 MiB de memória virtual e 5 s de tempo decorrido. O alvo de cada tarefa é o maior valor medido de cada recurso nas duas execuções. Os quatro tipos aparecem tanto no treino quanto no teste. Os códigos, entradas e medições estão no [conjunto de dados](data/initial-measurements.json).
+As famílias são mantidas inteiras em uma única partição para reduzir vazamento entre variantes parecidas. A validação escolhe as margens; conjuntos reservados medem generalização depois do congelamento. Os registros preservam hashes de código/entrada, medições e o instante real de observação.
 
 ### Modelos e infraestrutura
+O executor usa Bubblewrap, mounts somente leitura para entradas, rede externa isolada e limites RLIMIT_AS, RLIMIT_CPU, RLIMIT_FSIZE e RLIMIT_NOFILE, além de timeout de parede. O modelo usa 14 features do tamanho da entrada e da AST, sem identificadores, famílias ou medidas posteriores à execução. O regressor híbrido usa Extra Trees para memória e Gradient Boosting para tempo; o classificador Extra Trees prediz leitura e escrita.
 
-O protótipo utiliza Python 3.11 ou superior, Linux, Bubblewrap e scikit-learn.
+### Métricas e seleção
+MAE de memória/tempo, F1 micro de capacidades, omissões e acessos excedentes. Sucesso exige retorno zero, ausência de timeout e igualdade de stdout e hashes das saídas. A validação escolhe margens em grade fixa, priorizando cobertura e menor orçamento. Um replay por método compara limites fixos de 128 MiB/2 s, uma heurística de tamanho/AST e o modelo supervisionado. A comparação mantém controles externos iguais e embaralha a ordem dos métodos por tarefa.
 
-| Método | Como recomenda recursos |
-|---|---|
-| Fixo | Perfil constante de 128 MiB de memória virtual e 2 s. |
-| Heurística | Regras sobre o código e o tamanho da entrada. |
-| ML | Árvore de decisão de regressão treinada com o consumo medido. |
+### Fluxograma
+![Fases do projeto e separação entre recomendação e autorização](docs/figures/fluxograma.png)
 
-A árvore (`DecisionTreeRegressor`) recebe 11 características, como tamanhos do código e da entrada e quantidade de laços e chamadas. Ela aprende condições que agrupam exemplos para estimar pico de memória virtual e tempo decorrido. A profundidade máxima é 4, e somente as tarefas de treino ajustam o modelo.
+### Relação com Sistemas Operacionais
+O trabalho integra isolamento de processos, mounts, namespaces de rede, endereçamento virtual, CPU, descritores, arquivos e ciclo de vida de processos. Nenhuma alteração no kernel é necessária.
 
-As previsões recebem margens e passam pela política de autorização, que aplica os tetos do operador. As permissões de leitura e escrita são identificadas por análise estática, sem aprendizagem. O treinamento está explicado em [ML inicial](docs/ML_INICIAL.md); os comandos e controles do executor estão no [guia técnico](docs/GUIA_TECNICO.md).
+### Desenvolvimento incremental
+O protocolo separa recomendação estatística de autorização determinística. O treino reúne os workloads usados no modelo final; os candidatos anteriores aparecem apenas na comparação de métricas. A otimização CSV é uma operação distinta: `fused` reduz o trabalho por consulta, e ML só participa dessa seleção se superar a referência eficiente.
 
-### Métricas e fluxograma
+As capacidades são contratos autorais; não foram descobertas por avaliação causal de código arbitrário.
 
-Com o modelo fixo, cada tarefa de teste foi reexecutada uma vez por método: **24 reexecuções de avaliação**. Uma execução correta termina sem erro ou timeout e produz as saídas esperadas no terminal e nos arquivos.
-
-Comparamos correção, limite configurado de memória virtual, tempo decorrido, tempo de CPU e pico de RAM. Também calculamos o erro das previsões e sua cobertura das medições de referência.
-
-![Coleta, treinamento, recomendação, autorização e execução](docs/figures/fluxograma.png)
-
-*Figura 1 — Fluxo do experimento. Fonte: elaboração da equipe.*
-
-### Planejamento para as próximas semanas
-
-| Semana | Atividade e entrega prevista |
-|---|---|
-| 3 | Ampliar os dados e separar tipos de tarefa entre treino, validação e teste. |
-| 4 | Calibrar margens e comparar modelos com fixo e heurística; selecionar a configuração na validação. |
-| 5 | Avaliar tipos de tarefa reservados e consolidar resultados e instruções de reprodução. |
+![Distribuição das medições do treino original](docs/figures/train-eda.png)
 
 ## Resultados
 
-### Funcionamento do protótipo
+| Modelo | Treino | MAE memória (MiB) | MAE tempo (s) | Cobertura conjunta | Conclusões supervisionadas | Orçamento médio de memória |
+|---|---:|---:|---:|---:|---:|---:|
+| Padrão anterior | 96 | 5,979 | 0,0377 | 83% | 85/100 | 38,62 MiB |
+| Candidato ampliado | 1.576 | 6,202 | 0,0558 | 90% | 90/100 | 46,74 MiB |
+| Híbrido atual | 2.076 | 6,079 | 0,0229 | 100% | 100/100 | 59,54 MiB |
 
-O executor, a coleta, o treinamento e a avaliação estão integrados. Na validação local registrada para esta entrega, passaram os 35 testes da suíte, incluindo nove ensaios funcionais de contenção. A instalação também foi verificada com execução usando o modelo, argumentos, exportação de arquivo e relatório JSON.
+O híbrido concluiu 15 tarefas a mais que o modelo padrão anterior e elevou a cobertura conjunta, com aumento do orçamento médio de memória. Isso é uma troca entre cobertura e custo, não dominância em todas as métricas. O conjunto original de teste continua disponível como uma checagem complementar, menor e com famílias diferentes.
 
-### Comparação dos métodos
+Na operação CSV, `auto` usa `fused` quando nenhum modelo passa o critério de promoção. O modelo de recursos de `run` permanece separado. Os nove ensaios funcionais de contenção passaram; a execução completa habilitada com namespaces passou em 45 testes. Esses resultados não equivalem a auditoria de segurança ou certificação.
 
-| Método | Tarefas corretas | Limite médio de memória virtual (MiB) |
-|---|---:|---:|
-| Fixo | 8/8 | 128 |
-| Heurística | 8/8 | 35 |
-| ML | 8/8 | 42,25 |
-
-*Tabela 1 — Resultados nas oito tarefas de teste. Fonte: [relatório de avaliação](reports/initial-replay.json).*
-
-A heurística recomendou o menor limite médio. Antes das margens, o erro absoluto médio do ML foi de aproximadamente 0,94 MiB e 0,0094 s. Os limites dos três métodos cobriram as medições de referência.
-
-### Tempos e consumo medidos
-
-| Método | Tempo decorrido (ms) | Tempo de CPU (ms) | Pico médio de RAM (MiB) |
-|---|---:|---:|---:|
-| Fixo | 49,73 | 48,27 | 12,24 |
-| Heurística | 51,16 | 49,49 | 12,28 |
-| ML | 49,18 | 47,60 | 12,35 |
-
-*Tabela 2 — Médias das oito tarefas de cada método. Na memória, calculamos a média dos picos por execução. Fonte: [relatório de avaliação](reports/initial-replay.json).*
-
-O **limite de memória virtual** é um teto configurado, enquanto o **pico de RAM** é o maior uso de memória residente observado por processo. O **tempo decorrido** inclui esperas; o **tempo de CPU** representa o processamento consumido. O tempo medido não inclui o planejamento nem a preparação completa da sandbox. Os detalhes estão no [guia de métricas](docs/GUIA_TECNICO.md#leitura-das-métricas).
 
 ## Discussão
+O resultado sustenta a viabilidade de recomendar limites nos workloads avaliados. A melhora de conclusão veio acompanhada de orçamento médio maior, portanto não demonstra que o híbrido seja superior em qualquer métrica ou programa. O seletor CSV também mostra que uma implementação algorítmica eficiente pode resolver uma operação sem depender de ML. Intervalos de Wilson são apenas descritivos; variantes por família não são independentes.
 
-Os limites recomendados foram diferentes, mas os tempos e picos de RAM ficaram próximos. Portanto, limites menores não demonstraram menor consumo observado. Como houve apenas uma reexecução por método e tarefa, pequenas diferenças não sustentam uma conclusão de ganho de desempenho.
+A revisão de Saltzer e Schroeder [1] orienta a separação entre autoridade e previsão. O desempenho de Extra Trees [2] precisa ser julgado pelos experimentos, não pelo nome do algoritmo. A falha preservada do piloto confirma a importância de cobertura dos dados e de uma validação reservada para desenvolvimento [7]. Nenhuma decisão foi alterada após abrir o teste final.
 
-O conjunto é pequeno, compartilha tipos de tarefa entre treino e teste e não possui validação separada. A máquina e sua carga também influenciam as medições. A avaliação ampliada precisa verificar essas condições antes de justificar o uso do ML em outros cenários.
-
-Os controles e as medições são por processo, sem representar RAM agregada da sandbox. Os ensaios locais verificam casos controlados e não certificam segurança para execução pública de código hostil; os limites operacionais estão no [guia técnico](docs/GUIA_TECNICO.md#limites).
+Limitações: programas autorais simples, uma máquina, Python stdlib, três referências e apenas um replay por método, espera artificial de 40 ms e VmPeak amostrado. Não há tarefas reais geradas por agentes nem inferência de intenção em linguagem natural. A memória limitada é AS por processo. Faltam cgroups agregados, quota total de disco/tmpfs, limite de processos, seccomp específico e supervisor resistente a adulteração. O protótipo não está pronto para serviço público de execução hostil.
 
 ## Conclusão
-
-O piloto confirmou o funcionamento do fluxo, mas ainda não justifica preferir o ML à heurística. As semanas 3 a 5 ampliarão os dados, a seleção por validação e a avaliação em tipos de tarefa reservados.
+O projeto entrega executor isolado, coleta rastreável, regressão e classificação supervisionadas e uma estratégia CSV de uma passagem. O refinamento ampliou os workloads e melhorou as conclusões no teste independente medido, com um orçamento de memória maior. A continuação recomendada é avaliar programas independentes e endurecer controles agregados antes de qualquer implantação.
 
 ## Referências
 
-SALTZER, Jerome H.; SCHROEDER, Michael D. The protection of information in computer systems. Proceedings of the IEEE, v. 63, n. 9, p. 1278-1308, 1975. DOI: 10.1109/PROC.1975.9939. Disponível em: https://www.cs.virginia.edu/~evans/cs551/saltzer/. Acesso em: 2 nov. 2026.
+As referências fundamentam menor privilégio, isolamento Linux, Extra Trees e práticas de avaliação supervisionada. A aplicação e as limitações de cada fonte são resumidas abaixo.
 
-KWON, Yongin et al. Mantis: Automatic Performance Prediction for Smartphone Applications. In: USENIX ANNUAL TECHNICAL CONFERENCE, 2013, San Jose. Proceedings of the 2013 USENIX Annual Technical Conference. Berkeley: USENIX Association, 2013. p. 297-308. Disponível em: https://www.usenix.org/conference/atc13/technical-sessions/presentation/kwon. Acesso em: 2 nov. 2026.
+1. SALTZER, Jerome H.; SCHROEDER, Michael D. The protection of information in computer systems. Proceedings of the IEEE, v. 63, n. 9, p. 1278-1308, 1975. DOI: 10.1109/PROC.1975.9939. Disponível em: <https://www.cs.virginia.edu/~evans/cs551/saltzer/>.
+   **Uso:** menor privilégio, mediação e separação entre recomendação estatística e autorização determinística. O modelo não recebe autoridade para criar novos acessos.
 
-PEDREGOSA, Fabian et al. Scikit-learn: machine learning in Python. Journal of Machine Learning Research, v. 12, n. 85, p. 2825-2830, 2011. Disponível em: https://www.jmlr.org/papers/v12/pedregosa11a.html. Acesso em: 2 nov. 2026.
+2. GEURTS, Pierre; ERNST, Damien; WEHENKEL, Louis. Extremely randomized trees. Machine Learning, v. 63, p. 3-42, 2006. DOI: 10.1007/s10994-006-6226-1. Disponível em: <https://doi.org/10.1007/s10994-006-6226-1>.
+   **Uso:** fundamentação do ensemble Extra Trees para regressão de recursos e classificação multirrótulo de capacidades. O artigo não comprova desempenho neste domínio.
 
-SCIKIT-LEARN DEVELOPERS. DecisionTreeRegressor. Scikit-learn documentation. [S. l.], [s. d.]. Disponível em: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html. Acesso em: 2 nov. 2026.
+3. PEDREGOSA, Fabian et al. Scikit-learn: machine learning in Python. Journal of Machine Learning Research, v. 12, n. 85, p. 2825-2830, 2011. Disponível em: <https://www.jmlr.org/papers/v12/pedregosa11a.html>.
+   **Uso:** implementação dos estimadores supervisionados, métricas e reprodução com semente fixa.
 
-SCIKIT-LEARN DEVELOPERS. Common pitfalls and recommended practices. Scikit-learn documentation. [S. l.], [s. d.]. Disponível em: https://scikit-learn.org/stable/common_pitfalls.html. Acesso em: 2 nov. 2026.
+4. CONTAINERS PROJECT. Bubblewrap: low-level unprivileged sandboxing tool. [S. l.]: Containers Project, [s. d.]. Disponível em: <https://github.com/containers/bubblewrap>.
+   **Uso:** execução sem privilégios com namespaces, mounts seletivos e rede isolada. A segurança depende da configuração e do kernel; usar Bubblewrap não certifica a aplicação.
 
-CONTAINERS PROJECT. Bubblewrap. GitHub, [s. d.]. Disponível em: https://github.com/containers/bubblewrap. Acesso em: 2 nov. 2026.
+5. LINUX MAN-PAGES PROJECT. getrlimit(2): get/set resource limits. [S. l.]: Linux man-pages, [s. d.]. Disponível em: <https://www.man7.org/linux/man-pages/man2/getrlimit.2.html>.
+   **Uso:** aplicação de RLIMIT_AS, RLIMIT_CPU, RLIMIT_FSIZE, RLIMIT_NOFILE e desativação de core dumps. AS limita espaço virtual por processo, não memória física agregada.
 
-LINUX MAN-PAGES PROJECT. getrlimit(2): get/set resource limits. [S. l.], [s. d.]. Disponível em: https://www.man7.org/linux/man-pages/man2/getrlimit.2.html. Acesso em: 2 nov. 2026.
+6. LINUX MAN-PAGES PROJECT. namespaces(7): overview of Linux namespaces. [S. l.]: Linux man-pages, [s. d.]. Disponível em: <https://www.man7.org/linux/man-pages/man7/namespaces.7.html>.
+   **Uso:** separação de processos, mounts, rede e outros recursos. Namespace de cgroup não equivale à criação de limites de cgroup.
 
-INF0336 OPERATING SYSTEMS. Modelo de relatório do seminário. GitHub, 2026. Disponível em: https://github.com/2026-2-INF0336-OperatingSystems/assets/blob/main/README.md. Acesso em: 2 nov. 2026.
+7. SCIKIT-LEARN DEVELOPERS. Common pitfalls and recommended practices. In: Scikit-learn 1.5.2 documentation. [S. l.], 2024. Disponível em: <https://scikit-learn.org/1.5/common_pitfalls.html>.
+   **Uso:** impedir fit em validação/teste e excluir das features informações que só surgem depois da execução. O protocolo também separa famílias de programas.
+
+8. 2026-2-INF0336-OPERATINGSYSTEMS. INF0336: Seminário: modelo de relatório. Repositório assets, 2026. Disponível em: <https://github.com/2026-2-INF0336-OperatingSystems/assets/blob/main/README.md>.
+   **Uso:** estrutura dos relatórios incrementais: resumo de até dez orações, introdução, metodologia, fluxograma, resultados, discussão, conclusão e referências. Cópia local: references/INF0336-modelo.md. O repositório consultado não fornece tema gráfico de slides.
+
+
+## Executar esta etapa
+
+[Mapa dos componentes e materiais do projeto](docs/ENTREGAS.md).
+
+[Instalação e demonstração](docs/EXECUCAO.md).
+
+[Mapa técnico do código e dos comandos](docs/GUIA_TECNICO.md).
+
+### Estratégias para CSV
+
+| Opção | Uso |
+|---|---|
+| `auto` (padrão) | Política atual: usa `fused`, a menos que um modelo ML tenha sido promovido pela validação. |
+| `fused` | Executa explicitamente a agregação em uma passagem, sem seleção por ML. |
+
+Use `auto` no trabalho normal. `memory`, `blocks` e `heuristic` são mantidos apenas como baselines internos dos benchmarks, não como opções da CLI. O executável continua sendo `sentinela`.
+
+### Modelo e comparação
+
+O modelo ativo é híbrido: Extra Trees estima memória e capacidades; Gradient Boosting estima tempo. A comparação resumida entre o modelo anterior, o candidato intermediário e o modelo ativo está em [Métricas de comparação](docs/COMPARACAO_MODELOS.md). Só o modelo ativo e o dataset final são distribuídos.
