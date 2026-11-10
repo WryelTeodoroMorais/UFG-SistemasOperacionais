@@ -1,0 +1,39 @@
+{
+  "schema": "fusion-optimizer-v1",
+  "ml_enabled": false,
+  "reason": "fused_baseline_not_beaten_on_validation",
+  "promotion_rule": "at least 5% lower total time and no more RSS-target violations, at every validation target 24/64/128 MiB",
+  "validation": {
+    "24": {
+      "ml_seconds": 0.9003384619936696,
+      "fused_seconds": 0.8942167799978051,
+      "ml_targets_met": 12,
+      "fused_targets_met": 12,
+      "jobs": 12,
+      "relative_gain": -0.006845859005105481
+    },
+    "64": {
+      "ml_seconds": 0.9004038970015245,
+      "fused_seconds": 0.8942167799978051,
+      "ml_targets_met": 12,
+      "fused_targets_met": 12,
+      "jobs": 12,
+      "relative_gain": -0.00691903478229805
+    },
+    "128": {
+      "ml_seconds": 0.900316949997432,
+      "fused_seconds": 0.8942167799978051,
+      "ml_targets_met": 12,
+      "fused_targets_met": 12,
+      "jobs": 12,
+      "relative_gain": -0.00682180220286388
+    }
+  },
+  "setup_seconds": 0.005581024999628426,
+  "rss_margin": 1.05,
+  "model_sha256": "a02f3a31ccfcd77e9ae3039e674b7945783b7997866ee798f93284d343778490",
+  "train_sha256": "de89a3096e5f6455792cfe63009012bcc4456480c1638180c5666d915f41e3f1",
+  "validation_sha256": "cbbc27b336d26007f14afb75febd683cb7555c8a3869a2dbcd813214d4384a24",
+  "protocol_sha256": "4ff443be255570aece2056ac1d2a8dddd08f835eda34e01ba5545ccaab3e57a3",
+  "test_used": false
+}
