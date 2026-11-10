@@ -7,7 +7,9 @@ import json
 import os
 from pathlib import Path
 import resource
+import signal
 import subprocess
+import sys
 import time
 
 
@@ -25,7 +27,7 @@ def main():
 
     started = time.monotonic()
     with open("/tmp/stdout.log", "wb") as out, open("/tmp/stderr.log", "wb") as err:
-        child = subprocess.Popen(["/usr/bin/python3", "-I", "/app/task.py", *settings.get("script_args", [])],
+        child = subprocess.Popen(["/usr/bin/python3", "-I", "/app/task.py"],
                                  stdout=out, stderr=err, preexec_fn=limits)
         peak_vms_kb = 0
         timed_out = False

@@ -1,0 +1,18 @@
+{
+  "split": "validation",
+  "samples": 100,
+  "new_samples": 100,
+  "new_families": [
+    "json_nested_v3",
+    "list_filter_v3",
+    "matrix_transpose_v3",
+    "text_token_index_v3",
+    "tuple_set_v3"
+  ],
+  "repeats_per_sample": 3,
+  "sha256": "0ec49f32ec49ee76f6f98d3ee534542e1d0b40d2c6d0fd5dfd95d0decafd840f",
+  "median_peak_vms_mb": 26.33203125,
+  "median_wall_seconds": 0.11065869599997313,
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "measurement": "real Bubblewrap execution"
+}

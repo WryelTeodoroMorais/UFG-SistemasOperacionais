@@ -1,5 +1,6 @@
+import math
 import pytest
-from policy import Budget, authorize
+from sentinela.policy import Budget, authorize
 
 
 def test_recommendation_cannot_enlarge_authority():

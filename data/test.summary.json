@@ -1,0 +1,14 @@
+{
+  "split": "test",
+  "samples": 24,
+  "repeats": 3,
+  "families": [
+    "normalize",
+    "word_count"
+  ],
+  "sha256": "32b3fd103ac1c9087720bc0c2a48cd5147a2e1ad855491c136f5c4b1c6529862",
+  "median_vms_mb": 22.203125,
+  "median_wall_seconds": 0.07478330050003024,
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "measurement": "real Linux Bubblewrap execution"
+}
