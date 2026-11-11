@@ -1,4 +1,3 @@
-import math
 import pytest
 from sentinela.policy import Budget, authorize
 

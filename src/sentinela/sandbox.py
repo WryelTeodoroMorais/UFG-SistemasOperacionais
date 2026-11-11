@@ -36,8 +36,6 @@ def run(code: str, input_data: bytes = b"", budget: Budget | None = None,
         if input_path is None:
             (inputs / "data.txt").write_bytes(input_data)
         else:
-            # Copia com memória limitada também no controlador. Evita read_bytes
-            # do arquivo inteiro antes de iniciar a estratégia em blocos.
             with Path(input_path).open("rb") as source, (inputs / "data.txt").open("wb") as target:
                 total = 0
                 while chunk := source.read(1024**2):

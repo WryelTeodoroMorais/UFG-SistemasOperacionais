@@ -120,8 +120,7 @@ for query in range(PASSES):
     results.append(dict(threshold=threshold, count=count, total=total))
 '''
     else:
-        # Todos os limiares são conhecidos. Uma linha pertence a um intervalo
-        # e contribui para um sufixo de consultas. Sem reler nem guardar linhas.
+        # Contagens por intervalo e somas de sufixo resolvem consultas sem reler linhas.
         body = '''counts = [0] * PASSES
 totals = [0] * PASSES
 nrows = 0

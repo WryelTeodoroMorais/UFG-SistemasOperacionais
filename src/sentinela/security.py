@@ -22,8 +22,7 @@ def verify(root: Path):
     results = []
     for name, code, budget, should_succeed in cases:
         if name == "host_files":
-            # O arquivo realmente existe no host: ausência na sandbox comprova
-            # o mount seletivo, em vez de testar um caminho inexistente em ambos.
+            # Usa um arquivo existente no host para testar o mount seletivo.
             with tempfile.NamedTemporaryFile(mode="w", prefix="sentinela-host-proof-") as proof:
                 proof.write("host-only-marker")
                 proof.flush()

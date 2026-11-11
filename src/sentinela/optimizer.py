@@ -1,8 +1,4 @@
-"""Promoção supervisionada somente contra a implementação fundida forte.
-
-Inferência com stdlib; treinamento opcional/offline. A validação decide se vale
-pagar o custo de ML. Teste reservado não participa da promoção.
-"""
+"""Seleciona ML para CSV apenas se superar a estratégia fused na validação."""
 import hashlib
 import json
 import math
@@ -63,7 +59,6 @@ def load_optimizer(root: Path):
     policy = json.loads(policy_path.read_text())
     if policy.get("schema") != SCHEMA:
         raise ValueError("Política incompatível")
-    # Não carregar as árvores quando a validação não justifica ML.
     package = None
     if policy["ml_enabled"]:
         if sha(base / "model.json") != policy["model_sha256"]:
