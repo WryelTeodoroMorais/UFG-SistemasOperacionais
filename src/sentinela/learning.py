@@ -20,7 +20,7 @@ class HybridResourceRegressor:
 
     def __init__(self):
         self.memory_model = ExtraTreesRegressor(
-            n_estimators=128, min_samples_leaf=2, random_state=336, n_jobs=1)
+            n_estimators=256, min_samples_leaf=4, random_state=336, n_jobs=1)
         self.time_model = GradientBoostingRegressor(
             n_estimators=200, max_depth=2, learning_rate=0.03,
             loss="huber", random_state=336)
@@ -47,7 +47,7 @@ def train(root: Path):
     clf = ExtraTreesClassifier(n_estimators=128, min_samples_leaf=2, random_state=336, n_jobs=1)
     reg.fit(x, np.log1p(y))
     clf.fit(x, labels)
-    package = {"regressor": reg, "regressor_kind": "hybrid",
+    package = {"regressor": reg, "regressor_kind": "hybrid-et256-leaf4",
                "classifier": clf, "features": FEATURE_NAMES,
                "train_sha256": digest(root / "data/train.jsonl"),
                "train_ids": [r["id"] for r in rows],
@@ -66,26 +66,62 @@ def recommend(package: dict, features: list, margin: float, wall_margin: float) 
 
 
 def _freeze_model(root: Path):
-    """Margem escolhida por cobertura no validation, sem consultar teste."""
+    """Escolhe o menor orçamento com cobertura conjunta completa na validação."""
     if (root / "models/frozen.json").exists():
         raise FileExistsError("Configuração já congelada")
     package = joblib.load(root / "models/model.joblib")
     rows = load(root, "validation")
     if set(package["train_families"]) & {r["family"] for r in rows}:
         raise ValueError("Vazamento entre famílias")
+    heuristic_memory = np.array([
+        min(256, 32 + r["input_bytes"] / 1024**2 * 64) for r in rows
+    ])
+    heuristic_wall = np.array([
+        1.0 + r["input_bytes"] / 1024**2 for r in rows
+    ])
     candidates = []
-    for margin in (1.1, 1.35, 1.7, 2.1):
-        for wall_margin in (1.5, 2.0, 3.0):
+    for margin in (1.0, 1.05, 1.1, 1.15, 1.2, 1.35, 1.5, 1.7, 2.1, 2.5):
+        for wall_margin in (1.0, 1.05, 1.1, 1.2, 1.35, 1.5, 2.0, 3.0):
             recs = [recommend(package, r["features"], margin, wall_margin) for r in rows]
-            coverage = np.mean([p["memory_mb"] >= r["targets"]["memory_mb"] and
-                                p["wall_seconds"] >= r["targets"]["wall_seconds"]
-                                for p, r in zip(recs, rows)])
+            memory_coverage = np.mean([
+                p["memory_mb"] >= r["targets"]["memory_mb"]
+                for p, r in zip(recs, rows)
+            ])
+            wall_coverage = np.mean([
+                p["wall_seconds"] >= r["targets"]["wall_seconds"]
+                for p, r in zip(recs, rows)
+            ])
+            coverage = np.mean([
+                p["memory_mb"] >= r["targets"]["memory_mb"] and
+                p["wall_seconds"] >= r["targets"]["wall_seconds"]
+                for p, r in zip(recs, rows)
+            ])
             mean_budget = float(np.mean([p["memory_mb"] for p in recs]))
+            mean_wall = float(np.mean([p["wall_seconds"] for p in recs]))
+            normalized_budget = float((mean_budget / heuristic_memory.mean() +
+                                       mean_wall / heuristic_wall.mean()) / 2)
             candidates.append({"margin": margin, "wall_margin": wall_margin,
-                               "coverage": float(coverage), "mean_memory_mb": mean_budget})
-    chosen = min(candidates, key=lambda p: (p["coverage"] < .95, -p["coverage"],
-                                            p["mean_memory_mb"], p["wall_margin"]))
-    freeze = {**chosen, "candidates": candidates,
+                               "coverage": float(coverage),
+                               "memory_coverage": float(memory_coverage),
+                               "wall_coverage": float(wall_coverage),
+                               "mean_memory_mb": mean_budget,
+                               "mean_wall_seconds": mean_wall,
+                               "normalized_budget": normalized_budget,
+                               "heuristic_mean_memory_mb": float(heuristic_memory.mean()),
+                               "heuristic_mean_wall_seconds": float(heuristic_wall.mean())})
+    coverage_target = 1.0
+    qualified = [p for p in candidates if p["coverage"] >= coverage_target]
+    if qualified:
+        chosen = min(qualified, key=lambda p: (
+            p["normalized_budget"], -p["coverage"], p["mean_memory_mb"],
+            p["mean_wall_seconds"], p["wall_margin"],
+        ))
+    else:
+        chosen = min(candidates, key=lambda p: (
+            -p["coverage"], p["normalized_budget"], p["mean_memory_mb"],
+            p["mean_wall_seconds"],
+        ))
+    freeze = {**chosen, "candidate_count": len(candidates),
               "regressor_kind": package.get("regressor_kind", "hybrid"),
               "model_sha256": digest(root / "models/model.joblib"),
               "train_sha256": package["train_sha256"],
@@ -93,7 +129,8 @@ def _freeze_model(root: Path):
               "train_families": len(package["train_families"]),
               "validation_sha256": digest(root / "data/validation.jsonl"),
               "test_used": False,
-              "selection_rule": "coverage >= .95 when attainable; otherwise maximum coverage; then smallest memory budget and time margin",
+              "coverage_target": coverage_target,
+              "selection_rule": "minimum mean budget normalized to the heuristic, subject to 100% joint memory/time coverage on validation when attainable; otherwise maximum coverage",
               "feature_schema": list(FEATURE_NAMES)}
     (root / "models/frozen.json").write_text(json.dumps(freeze, indent=2))
     return freeze

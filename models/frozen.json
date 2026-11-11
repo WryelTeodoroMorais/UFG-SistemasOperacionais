@@ -1,88 +1,23 @@
 {
-  "margin": 1.7,
-  "wall_margin": 1.5,
+  "margin": 1.35,
+  "wall_margin": 1.2,
   "coverage": 1.0,
-  "mean_memory_mb": 58.04223399255484,
-  "candidates": [
-    {
-      "margin": 1.1,
-      "wall_margin": 1.5,
-      "coverage": 0.86,
-      "mean_memory_mb": 38.96850434812373
-    },
-    {
-      "margin": 1.1,
-      "wall_margin": 2.0,
-      "coverage": 0.86,
-      "mean_memory_mb": 38.96850434812373
-    },
-    {
-      "margin": 1.1,
-      "wall_margin": 3.0,
-      "coverage": 0.86,
-      "mean_memory_mb": 38.96850434812373
-    },
-    {
-      "margin": 1.35,
-      "wall_margin": 1.5,
-      "coverage": 0.96,
-      "mean_memory_mb": 46.91589169997003
-    },
-    {
-      "margin": 1.35,
-      "wall_margin": 2.0,
-      "coverage": 0.96,
-      "mean_memory_mb": 46.91589169997003
-    },
-    {
-      "margin": 1.35,
-      "wall_margin": 3.0,
-      "coverage": 0.96,
-      "mean_memory_mb": 46.91589169997003
-    },
-    {
-      "margin": 1.7,
-      "wall_margin": 1.5,
-      "coverage": 1.0,
-      "mean_memory_mb": 58.04223399255484
-    },
-    {
-      "margin": 1.7,
-      "wall_margin": 2.0,
-      "coverage": 1.0,
-      "mean_memory_mb": 58.04223399255484
-    },
-    {
-      "margin": 1.7,
-      "wall_margin": 3.0,
-      "coverage": 1.0,
-      "mean_memory_mb": 58.04223399255484
-    },
-    {
-      "margin": 2.1,
-      "wall_margin": 1.5,
-      "coverage": 1.0,
-      "mean_memory_mb": 70.75805375550891
-    },
-    {
-      "margin": 2.1,
-      "wall_margin": 2.0,
-      "coverage": 1.0,
-      "mean_memory_mb": 70.75805375550891
-    },
-    {
-      "margin": 2.1,
-      "wall_margin": 3.0,
-      "coverage": 1.0,
-      "mean_memory_mb": 70.75805375550891
-    }
-  ],
-  "regressor_kind": "hybrid",
-  "model_sha256": "366872083117593ae30fd0bf961144448543677e5c088111899aa2b3b68fe5e0",
-  "train_sha256": "218986403990b2fc684eb61a9c3e3dc5e628fb21b5228552a274be712e88c8ba",
-  "validation_sha256": "0ec49f32ec49ee76f6f98d3ee534542e1d0b40d2c6d0fd5dfd95d0decafd840f",
+  "memory_coverage": 1.0,
+  "wall_coverage": 1.0,
+  "mean_memory_mb": 42.203459968789886,
+  "mean_wall_seconds": 0.2240124615888979,
+  "normalized_budget": 0.4178306955073231,
+  "heuristic_mean_memory_mb": 61.80684753417969,
+  "heuristic_mean_wall_seconds": 1.4657319927215575,
+  "regressor_kind": "hybrid-et256-leaf4",
+  "model_sha256": "ca8fab7996824fb2675e0f64f8b9125554f726128c236d727e76d2b41d863177",
+  "train_sha256": "988f44454dd3699e851d3f3ef088a6e53a5f0bb695d7072af58d8f7f5fac56fd",
+  "train_samples": 3300,
+  "train_families": 67,
+  "validation_sha256": "42f3e49889114fca131980e1d4e1c329b7ce5321fa16c918837dcac527feb9e3",
   "test_used": false,
-  "selection_rule": "coverage >= .95 when attainable; otherwise maximum coverage; then smallest memory budget and time margin",
+  "coverage_target": 1.0,
+  "selection_rule": "minimum mean budget normalized to the heuristic, subject to 100% joint memory/time coverage on validation when attainable; otherwise maximum coverage",
   "feature_schema": [
     "log_input_bytes",
     "log_code_bytes",
@@ -91,14 +26,13 @@
     "comprehensions",
     "calls",
     "imports",
-    "read_calls",
-    "write_calls",
+    "input_read_calls",
+    "output_write_calls",
     "sort_calls",
     "json_calls",
     "hash_calls",
     "allocation_calls",
     "log_max_literal"
   ],
-  "train_samples": 2076,
-  "train_families": 35
+  "candidate_count": 80
 }

@@ -35,6 +35,8 @@ def main(argv=None):
     collect = sub.add_parser("collect")
     collect.add_argument("split", choices=["train", "validation", "test"])
     collect.add_argument("--repeats", type=int, default=3)
+    collect.add_argument("--append", action="store_true",
+                         help="Acrescenta tarefas ausentes; permitido somente para test")
     sub.add_parser("train")
     evaluate = sub.add_parser("evaluate")
     evaluate.add_argument("split", choices=["validation", "test"])
@@ -61,7 +63,7 @@ def main(argv=None):
             from .data import collect
             if args.repeats <= 0:
                 raise ValueError("Repetições precisam ser positivas")
-            result = collect(root, args.split, args.repeats)
+            result = collect(root, args.split, args.repeats, append=args.append)
         elif args.command == "train":
             from .learning import train
             result = train(root)
