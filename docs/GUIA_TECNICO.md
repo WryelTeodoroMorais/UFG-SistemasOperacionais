@@ -21,6 +21,7 @@ com:
 | `doctor` | Verifica se o Bubblewrap e os namespaces necessários funcionam. |
 | `run SCRIPT --output PASTA` | Executa um script Python isolado com `fixed`, `heuristic` ou `supervised`. Pode receber `--input ARQUIVO`. |
 | `collect DIVISAO` | Mede o conjunto completo `train`, `validation` ou `test`. |
+| `collect test --append` | Acrescenta tarefas ausentes e preserva as existentes. |
 | `train` | Ajusta o modelo híbrido ativo e grava sua configuração congelada usando a validação. |
 | `evaluate DIVISAO` | Avalia `validation` ou `test` quando os dados e o modelo necessários estão disponíveis. |
 | `security` | Executa os ensaios funcionais de contenção. |
@@ -59,15 +60,17 @@ não pode conceder permissões além desse teto.
 
 O modelo de recursos de `run` é independente do otimizador da operação CSV.
 
+Detalhes das partições, features e avaliação estão em
+[Metodologia](METODOLOGIA.md); as métricas finais estão em
+[Comparação de modelos](COMPARACAO_MODELOS.md).
+
 ## Artefatos congelados
 
-`models/model.joblib` contém o modelo de recursos ativo e é carregado por
-`run --method supervised`. `models/frozen.json` guarda suas margens e os hashes
-do modelo, do treino e da validação; os dois arquivos formam um par, e o
-carregador rejeita divergências. `evolution/fusion/frozen.json` pertence à
-decisão CSV: documenta por que o ML foi reprovado na validação e `auto` usa
-`fused`. Sem esse arquivo, o runtime também cai em `fused`, mas o registro
-congelado preserva a evidência da decisão.
+`models/model.joblib` contém o modelo de recursos carregado por
+`run --method supervised`; `models/frozen.json` registra as margens e hashes que
+validam o par. A política CSV está descrita em
+[Fusão e justificativa](FUSAO_E_JUSTIFICATIVA.md). Parâmetros e critérios de
+seleção do modelo de recursos estão em [Metodologia](METODOLOGIA.md).
 
 ## Organização do código
 

@@ -1,68 +1,117 @@
-# Protocolo experimental definido antes do teste
+# Metodologia e protocolo experimental
 
 ## Pergunta e hipótese
 
-Um recomendador supervisionado consegue reduzir os limites configurados e as capacidades excedentes de uma sandbox sem reduzir a conclusão correta de tarefas em relação a perfis fixos e uma heurística? Reduzir o limite configurado não significa reduzir consumo físico nem reservar menos RAM: essas grandezas são relatadas separadamente.
+Um recomendador supervisionado consegue reduzir os limites configurados e as
+capacidades excedentes de uma sandbox sem reduzir as conclusões corretas em
+relação a um perfil fixo e a uma heurística? Um limite menor não implica menor
+uso físico de RAM nem execução mais rápida; essas grandezas são relatadas à
+parte. O experimento mede workloads controlados, não pretende provar uma
+superioridade universal do aprendizado de máquina.
 
-Hipóteses: H1, recomendar limites de espaço virtual e tempo conforme o programa evita superdimensionamento uniforme; H2, classificar acesso à entrada e saída pode reduzir capacidades excedentes; H3, erros de generalização podem impedir tarefas novas, portanto segurança do executor e qualidade do modelo devem ser avaliadas separadamente. Não se presume vitória de ML.
+## Escopo e isolamento
 
-## Escopo implementado
+O sistema executa scripts Python/stdlib recebidos como arquivos. Não inclui um
+agente gerador completo nem depende de API paga ou LLM. O usuário fornece a
+entrada e o destino; o modelo não escolhe caminhos, rede ou novas permissões.
 
-Execução de scripts Python/stdlib recebidos como arquivos, interface que pode ser chamada por um agente externo, sem API paga ou LLM obrigatório. O projeto não implementa um agente gerador completo e não avalia gerações de LLM reais. O usuário autoriza explicitamente os arquivos de entrada e o destino; o modelo não cria caminhos ou concede rede. O protótipo trabalha com uma entrada nomeada /input/data.txt e saídas em /output.
+Bubblewrap monta o ambiente e as entradas com acesso somente para leitura,
+isola a rede e cria os namespaces necessários. O processo recebe limites
+RLIMIT_AS, RLIMIT_CPU, RLIMIT_FSIZE e RLIMIT_NOFILE, além de timeout de parede.
+Sem suporte aos namespaces, a execução falha sem fallback no host. O protótipo
+não implementa cgroups agregados de memória/processos, quota total de disco ou
+tmpfs, nem política seccomp específica; a medição do supervisor não resiste a
+código adversarial. Não está pronto para execução pública multiusuário.
 
-Bubblewrap monta /usr e bibliotecas como somente leitura, cria namespaces e expõe somente a entrada selecionada. A rede externa fica isolada e a política rejeita capacidade de rede. O processo Python recebe limites de espaço virtual, CPU, tamanho individual de arquivo e descritores; o supervisor limita tempo de parede. Sem suporte a namespaces, a execução falha fechada, sem fallback para execução no host.
+## Dados e partições
 
-Limitações de isolamento: este protótipo não implementa quota agregada de disco/tmpfs, memória de cgroup, limite agregado de processos nem política seccomp específica. Não deve ser publicado como serviço multiusuário para código hostil. A medição do supervisor no mesmo namespace não é resistente a adulteração por código adversarial. Os ensaios avaliam erros controlados, não evasão deliberada nem exploits de kernel.
+Os workloads são sintéticos, determinísticos e medidos em uma máquina Linux.
+Famílias inteiras ficam em uma única partição para reduzir vazamento entre
+variantes parecidas.
 
-## Dados e rotulagem
+| Partição | Famílias | Amostras | Uso |
+|---|---:|---:|---|
+| Treino | 67 | 3.300 | Ajuste do modelo único |
+| Validação | 5 | 100 | Escolha de margens e avaliação de desenvolvimento |
+| Teste final | 17 | 850 | Avaliação após o congelamento |
 
-Benchmarks autorais controlados em 42 famílias. As tarefas têm tamanhos variados e sementes determinísticas. Não são dados observados em produção nem uma amostra representativa de agentes reais.
+O teste corresponde a 20% dos 4.250 registros. Suas 17 famílias são distintas
+das usadas no treino e na validação. Os registros do teste não participam do
+ajuste nem da seleção de margens.
 
-| Partição | Conteúdo | Amostras |
-|---|---|---:|
-| Treino | 35 famílias reunidas no dataset final | 2.076 |
-| Validação | Cinco famílias reservadas para margens | 100 |
-| Teste original | Duas famílias reservadas | 24 |
+Cada tarefa tem três execuções de referência com limite de 256 MiB de espaço
+virtual por processo, 5 s de parede e 3 s de CPU. O alvo é o maior VmPeak e a
+maior duração observados. VmPeak é amostrado em `/proc` e pode perder picos muito
+curtos; RSS também é registrado, mas não é o alvo do RLIMIT_AS. Uma espera
+artificial de 40 ms mantém os dados vivos para amostragem e cria um piso
+temporal. Resultados de duração têm essa limitação.
 
-A comparação entre candidatos foi feita também em 100 tarefas reservadas cujos
-registros brutos ficam locais. O resumo das métricas está em
-[COMPARACAO_MODELOS.md](COMPARACAO_MODELOS.md).
+Capacidades são rótulos do contrato de cada workload: ler `/input` e escrever
+em `/output`. Os programas não são código de agentes reais e os rótulos não
+demonstram causalidade universal sobre programas arbitrários.
 
-A atribuição de famílias é fixa antes da coleta. O teste só é gerado e medido após congelar o modelo e as margens. Conhecer a especificação de um experimento futuro não autoriza usar suas medições ou resultados antecipadamente. Variantes de uma família ficam na mesma partição; não há divisão aleatória de linhas quase idênticas.
+## Features e modelo
 
-Cada tarefa tem três execuções de referência com limite amplo de 256 MiB de espaço virtual por processo, 5 s de parede e 3 s de CPU. O alvo é o máximo das três medições de VmPeak e duração, para reduzir subestimação por ruído. VmPeak é amostrado de /proc e pode perder picos muito curtos. RSS vem de wait4/rusage e é registrado, mas não é o alvo do RLIMIT_AS. Espera artificial de 40 ms mantém dados vivos para a amostragem: isso introduz um piso temporal que limita a validade da previsão de tempo.
+O modelo usa 14 features anteriores à execução: tamanho da entrada e do código,
+medidas da AST, laços, compreensões, chamadas, imports, operações de leitura e
+escrita, ordenação, JSON, hash, alocação e maior literal numérico. Os campos de
+leitura/escrita reconhecem `Path.read_text()` e `Path.open()` quando o caminho
+literal pertence a `/input` ou `/output`. Identificador, família, split e
+medições posteriores à execução não entram no estimador.
 
-Capacidades são rótulos autorais dos contratos: ler entrada e escrever saída. Nos programas construídos, a saída esperada é verificada por stdout e hashes dos arquivos. Os rótulos não resultam de revisão humana independente nem de demonstração causal universal de necessidade. A capacidade escrita no relatório é um acesso lógico, não uma Linux capability de privilégio.
+O único artefato ativo é um modelo híbrido:
 
-## Features e aprendizado supervisionado
+- Extra Trees Regressor com 256 árvores, folhas mínimas de quatro amostras,
+  semente 336 e um worker estima VmPeak.
+- Gradient Boosting Regressor com 200 estágios, profundidade 2, taxa 0,03 e
+  perda Huber estima tempo.
+- Extra Trees Classifier com 128 árvores e folhas mínimas de duas amostras
+  classifica leitura e escrita.
 
-Features disponíveis antes da execução: tamanho da entrada, tamanho do código, contagem de nós AST, laços, compreensões, chamadas, imports, chamadas de leitura/escrita, ordenação, JSON, hash, alocação e maior literal numérico. Identificador, família, split, tempo medido e memória medida ficam fora da entrada do modelo. O maior literal é conhecido no código; nos benchmarks de alocação ele torna a demanda especialmente previsível, o que restringe a generalização.
+Os alvos de memória e tempo são transformados com `log1p` no fit. A inferência
+usa limites inferiores de 24 MiB e 200 ms, soma 4 MiB e 80 ms às estimativas e
+aplica margens congeladas. A validação escolhe o menor orçamento médio
+normalizado à heurística que alcance cobertura conjunta completa quando
+possível; se a grade não alcançar 100%, escolhe a maior cobertura antes do
+menor orçamento. As margens congeladas são 1,35 para memória e 1,20 para tempo.
+Os resultados medidos na validação servem à seleção, não a uma estimativa
+independente de generalização.
 
-O único modelo ativo é híbrido: Extra Trees estima memória e capacidades, e
-Gradient Boosting estima tempo. O classificador e o estimador Extra Trees usam
-128 árvores, min_samples_leaf=2, random_state=336 e n_jobs=1. A validação
-seleciona as margens; o teste não é usado para ajuste.
+A política de autorização intersecta a recomendação com o teto externo. O
+modelo não pode elevar esse teto; recomendações não finitas, capacidades
+desconhecidas e valores fora do contrato são rejeitados.
 
-Margens candidatas: memória em {1,10; 1,35; 1,70; 2,10} e tempo em {1,5; 2,0; 3,0}. A recomendação adiciona 4 MiB e 80 ms e impõe mínimos de 24 MiB e 200 ms. A validação seleciona a maior cobertura conjunta de memória/tempo, privilegiando cobertura de pelo menos 95% quando possível e, nos empates, o menor orçamento de memória e a menor margem de tempo. Cobertura de medições não garante sucesso na reexecução. A margem escolhida permanece congelada no teste.
+## Baselines e comparação
 
-O controlador intersecta as capacidades sugeridas com o teto externo. Recursos não finitos ou capacidades desconhecidas são rejeitados. Erros de omissão podem fazer a tarefa falhar; não há escalada automática de permissões nem retentativas ocultas que mudem a comparação.
+Perfil fixo: 128 MiB, 2 s e ambas as capacidades. Heurística: 32 MiB mais 64
+vezes os MiB da entrada, limitado a 256 MiB; 1 s mais os MiB da entrada. Ela
+usa as features AST de leitura/escrita, incluindo abertura literal de arquivos
+em `/input` e `/output`. CPU, tamanho de saída e sandbox são iguais nos três
+métodos.
 
-## Baselines e métricas
+Cada tarefa recebe um replay por método em ordem determinística embaralhada.
+Esse replay é distinto das três referências usadas para criar os alvos. Sucesso
+operacional exige retorno zero, ausência de timeout e igualdade de stdout e
+hashes das saídas.
 
-Perfil fixo: 128 MiB, 2 s e ambas as capacidades. Heurística: 32 MiB mais 64 vezes o tamanho da entrada em MiB, limitado a 256 MiB; 1 s mais o tamanho da entrada em MiB; leitura/escrita detectadas por chamadas AST. A regra não usa nomes de famílias. Controle de CPU e saída é idêntico entre métodos. Um replay por método/tarefa, com ordem embaralhada deterministicamente; as três execuções de referência não são três repetições da comparação.
+As métricas incluem MAE de memória/tempo, F1 micro e correspondência exata de
+capacidades, capacidades omitidas/excedentes, conclusões por família, limites
+médios configurados e duração observada. Intervalos de Wilson são apenas
+descritivos: as variantes de uma família não são amostras independentes. O
+teste final não é usado para escolher features, hiperparâmetros ou margens.
 
-Métricas de regressão: MAE do pico de espaço virtual e duração. Classificação: F1 micro, correspondência exata, capacidades omitidas e excedentes. Resultado operacional: código de saída zero, ausência de timeout e igualdade de stdout/hashes de saída com a referência. Relatar sucesso por família, limite médio configurado e duração observada. Intervalos de Wilson são apenas descritivos, pois variantes compartilham família; não há conclusão de significância ou superioridade populacional.
+## Reprodução e limites
 
-## Reprodutibilidade
+Os JSONL registram hashes dos dados e o instante real de observação. A
+configuração congelada registra os hashes de treino, validação e modelo. A
+avaliação completa gera relatório local em `reports/` e não sobrescreve uma
+execução anterior.
 
-Os registros preservam o instante real de observação e hashes dos arquivos. As
-partições são definidas por família e por protocolo; os carregadores não usam
-calendário ou rótulo de etapa para decidir quais dados podem ser lidos. A
-configuração congelada registra os hashes de treino, validação e modelo.
+O conjunto é pequeno por família, autoral e executado em um único ambiente.
+Esses resultados não substituem testes com código real, hardware diferente,
+repetições independentes, revisão humana dos contratos ou auditoria do
+isolamento.
 
-## Fluxograma
+## Fluxo de dados
 
-![Fluxograma das fases e da separação de dados](figures/fluxograma.png)
-
-As etapas de coleta e a política externa são separadas do fit. O teste só
-alimenta a avaliação final.
+![Fluxo de coleta, treino, validação e teste reservado](figures/fluxograma.png)

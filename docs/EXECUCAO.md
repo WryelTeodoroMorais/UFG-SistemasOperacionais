@@ -6,7 +6,7 @@ Na raiz do checkout atual:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pip install --no-deps -e .
 .venv/bin/sentinela doctor
 ```
@@ -14,7 +14,7 @@ python3 -m venv .venv
 O checkout atual tem uma única entrada de execução: `sentinela`, implementada
 em `src/sentinela/cli.py`.
 
-As dependências e o modelo distribuído correspondem às versões medidas, registradas em requirements-lock.txt. Um modelo joblib deve ser carregado apenas de uma origem confiável: o projeto fornece seu hash no congelamento. Isso não transforma pickle/joblib em um formato seguro para arquivos arbitrários.
+As versões das dependências usadas nas medições estão fixadas em `requirements.txt`. Um modelo joblib deve ser carregado apenas de uma origem confiável: o projeto fornece seu hash no congelamento. Isso não transforma pickle/joblib em um formato seguro para arquivos arbitrários.
 
 ## Demonstração com o modelo congelado
 
@@ -22,7 +22,7 @@ As dependências e o modelo distribuído correspondem às versões medidas, regi
 .venv/bin/sentinela run examples/analisar.py --input examples/entrada.csv --output demo-output --method supervised
 ```
 
-`analisar.py` espera linhas CSV com duas colunas inteiras. `--input examples/entrada.csv` monta o arquivo em `/input/data.txt`; o exemplo soma a segunda coluna, grava `relatorio.json` em `/output` e imprime uma confirmação. `entrada.csv` contém três linhas pequenas para demonstração. `text_stats.py` e `uppercase.py` são exemplos de texto, não CSV.
+`analisar.py` espera linhas CSV com duas colunas inteiras. `--input examples/entrada.csv` monta o arquivo em `/input/data.txt`; o exemplo soma a segunda coluna, grava `relatorio.json` em `/output` e imprime uma confirmação. `entrada.csv` contém três linhas para demonstração.
 
 O controlador exporta somente arquivos regulares diretamente em `/output`, não segue symlinks e não sobrescreve arquivos existentes no destino. O modelo pode omitir uma capacidade e causar falha; não há ampliação automática. Use `--method fixed` ou `--method heuristic` para comparar. Não se promete suporte a quaisquer scripts externos: bibliotecas disponíveis são as da Python stdlib do host, expostas somente para leitura.
 
