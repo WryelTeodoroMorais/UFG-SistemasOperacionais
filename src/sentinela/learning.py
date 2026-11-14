@@ -57,11 +57,16 @@ def train(root: Path):
     return _freeze_model(root)
 
 
+def _resource_budgets(memory, wall, margin: float, wall_margin: float):
+    return (np.maximum(24, memory * margin + 4),
+            np.maximum(0.2, wall * wall_margin + 0.08))
+
+
 def recommend(package: dict, features: list, margin: float, wall_margin: float) -> dict:
     memory, wall = np.expm1(package["regressor"].predict([features])[0])
+    memory_budget, wall_budget = _resource_budgets(memory, wall, margin, wall_margin)
     caps = package["classifier"].predict([features])[0]
-    return {"memory_mb": max(24, float(memory) * margin + 4),
-            "wall_seconds": max(0.2, float(wall) * wall_margin + 0.08),
+    return {"memory_mb": float(memory_budget), "wall_seconds": float(wall_budget),
             "read_input": bool(caps[0]), "write_output": bool(caps[1])}
 
 
@@ -79,31 +84,24 @@ def _freeze_model(root: Path):
     heuristic_wall = np.array([
         1.0 + r["input_bytes"] / 1024**2 for r in rows
     ])
+    memory, wall = np.expm1(package["regressor"].predict([r["features"] for r in rows])).T
+    memory_targets = np.array([r["targets"]["memory_mb"] for r in rows])
+    wall_targets = np.array([r["targets"]["wall_seconds"] for r in rows])
     candidates = []
     for margin in (1.0, 1.05, 1.1, 1.15, 1.2, 1.35, 1.5, 1.7, 2.1, 2.5):
         for wall_margin in (1.0, 1.05, 1.1, 1.2, 1.35, 1.5, 2.0, 3.0):
-            recs = [recommend(package, r["features"], margin, wall_margin) for r in rows]
-            memory_coverage = np.mean([
-                p["memory_mb"] >= r["targets"]["memory_mb"]
-                for p, r in zip(recs, rows)
-            ])
-            wall_coverage = np.mean([
-                p["wall_seconds"] >= r["targets"]["wall_seconds"]
-                for p, r in zip(recs, rows)
-            ])
-            coverage = np.mean([
-                p["memory_mb"] >= r["targets"]["memory_mb"] and
-                p["wall_seconds"] >= r["targets"]["wall_seconds"]
-                for p, r in zip(recs, rows)
-            ])
-            mean_budget = float(np.mean([p["memory_mb"] for p in recs]))
-            mean_wall = float(np.mean([p["wall_seconds"] for p in recs]))
+            memory_budget, wall_budget = _resource_budgets(memory, wall, margin, wall_margin)
+            memory_met = memory_budget >= memory_targets
+            wall_met = wall_budget >= wall_targets
+            coverage = np.mean(memory_met & wall_met)
+            mean_budget = float(memory_budget.mean())
+            mean_wall = float(wall_budget.mean())
             normalized_budget = float((mean_budget / heuristic_memory.mean() +
                                        mean_wall / heuristic_wall.mean()) / 2)
             candidates.append({"margin": margin, "wall_margin": wall_margin,
                                "coverage": float(coverage),
-                               "memory_coverage": float(memory_coverage),
-                               "wall_coverage": float(wall_coverage),
+                               "memory_coverage": float(memory_met.mean()),
+                               "wall_coverage": float(wall_met.mean()),
                                "mean_memory_mb": mean_budget,
                                "mean_wall_seconds": mean_wall,
                                "normalized_budget": normalized_budget,
