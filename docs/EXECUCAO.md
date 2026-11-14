@@ -1,11 +1,15 @@
 # Instalação e execução
 
-Requisitos: Linux, Python 3.11+ e Bubblewrap com namespaces de usuário e rede habilitados. Em Debian/Ubuntu, o pacote do executor é bubblewrap. Algumas políticas corporativas/containers impedem a criação de namespaces; nesse caso doctor deve falhar. Não execute como root nem desative o isolamento para contornar a falha.
+Use Linux, Python 3.12 e Bubblewrap com namespaces de usuário e rede
+habilitados para reproduzir o ambiente das medições. As versões fixadas de
+NumPy e SciPy em `requirements.txt` exigem Python 3.12 ou superior. Em
+Debian/Ubuntu, instale o pacote `bubblewrap`. Em ambientes que restringem
+namespaces, `sentinela doctor` retorna erro.
 
 Na raiz do checkout atual:
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pip install --no-deps -e .
 .venv/bin/sentinela doctor
@@ -26,6 +30,24 @@ As versões das dependências usadas nas medições estão fixadas em `requireme
 
 O controlador exporta somente arquivos regulares diretamente em `/output`, não segue symlinks e não sobrescreve arquivos existentes no destino. O modelo pode omitir uma capacidade e causar falha; não há ampliação automática. Use `--method fixed` ou `--method heuristic` para comparar. Não se promete suporte a quaisquer scripts externos: bibliotecas disponíveis são as da Python stdlib do host, expostas somente para leitura.
 
+## Interface web local
+
+Execute `make web` na raiz do repositório e abra
+[127.0.0.1:8765](http://127.0.0.1:8765). O servidor escuta no loopback.
+Encerre com Ctrl+C. A tela já abre com o script e o JSONL de validação.
+
+- **Executar Python** oferece exemplos JSONL de treino, validação e teste.
+  Você também pode carregar um script e uma entrada próprios. Escolha um
+  método e, para ML, 500, 1.500 ou 3.300 tarefas de treino.
+
+Os modelos de 500 e 1.500 tarefas usam subconjuntos encaixados e distribuídos
+por família do treino versionado. Usam a mesma arquitetura e o mesmo conjunto
+de validação do modelo completo. O preparo ocorre no primeiro uso. Para
+adiantá-lo, execute `.venv/bin/python -m sentinela.web --prepare-models`.
+Os artefatos derivados ficam em `.build/sentinela-web-models/`. A interface
+mede cada execução, enquanto a avaliação de 850 tarefas no relatório se refere
+ao modelo completo.
+
 ## Reproduzir o experimento em uma cópia limpa
 
 O clone já contém o dataset final e o modelo congelado. Para repetir a coleta e o treino em uma cópia limpa, preserve o código e os exemplos, mas comece sem `data/`, `models/` e `reports/`. Execute as fases abaixo; a coleta recusa sobrescrever arquivos existentes:
@@ -42,11 +64,14 @@ O treino usa um único modelo híbrido e a validação escolhe suas margens. Nã
 
 ```bash
 .venv/bin/python -m pytest -q
-SENTINELA_INTEGRATION=1 .venv/bin/python -m pytest -q tests/test_sandbox.py
+make integration
 .venv/bin/sentinela security
 ```
 
-Os testes de integração requerem permissões de namespaces. A suíte comum os ignora explicitamente para não reportar execução simulada como isolamento real. O comando security executa nove casos controlados e uma verificação de rejeição de capacidade de rede.
+Os testes de integração requerem permissões de namespaces. A suíte comum
+marca esses testes como ignorados. `make integration` roda a suíte completa
+com integração habilitada. O comando `security` executa nove casos controlados
+e uma verificação de rejeição de capacidade de rede.
 
 ## Limites efetivos
 

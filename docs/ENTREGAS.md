@@ -17,12 +17,11 @@ componentes técnicos.
 
 ## Apresentações
 
-Apresentações e roteiros são materiais locais, separados dos arquivos
-versionados do projeto.
+A apresentação da semana 2 está no [README](../README.md#apresentações).
 
 ## Escopo dos resultados
 
 Há um único modelo ativo. Os dados, protocolo e limites estão descritos em
 [Metodologia](METODOLOGIA.md); os resultados e baselines ficam em
-[Métricas de comparação](COMPARACAO_MODELOS.md). As avaliações detalhadas e as
-apresentações permanecem locais.
+[Métricas de comparação](COMPARACAO_MODELOS.md). Os relatórios detalhados de
+avaliação são gerados localmente.

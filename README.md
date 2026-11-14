@@ -94,9 +94,10 @@ em [Fusão CSV](docs/FUSAO_E_JUSTIFICATIVA.md).
 
 ### Funcionamento do protótipo
 
-A validação funcional registrou nove verificações de contenção e 45 testes de
-integração com namespaces habilitados. Esses resultados não equivalem a uma
-auditoria de segurança.
+A suíte completa reúne 44 testes unitários e de integração. O comando
+`sentinela security` executa nove casos controlados e verifica se a política
+rejeita pedidos de acesso à rede. Os comandos de verificação e os limites
+estão no [guia de execução](docs/EXECUCAO.md).
 
 ### Comparação dos métodos
 
@@ -128,9 +129,10 @@ público. [Metodologia](docs/METODOLOGIA.md) descreve os limites do experimento.
 
 ## Conclusão
 
-O modelo reduziu os limites configurados e obteve mais conclusões corretas que
-a heurística neste conjunto. Isso ainda precisa ser confirmado com programas
-reais e outros ambientes.
+Neste conjunto, o modelo reduziu os limites configurados e concluiu 11 tarefas
+a mais que a heurística. O perfil fixo concluiu todas as 850 tarefas com
+orçamentos maiores. A comparação precisa ser confirmada com programas reais
+e outros ambientes.
 
 ## Referências
 

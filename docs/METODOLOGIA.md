@@ -69,8 +69,8 @@ O único artefato ativo é um modelo híbrido:
   classifica leitura e escrita.
 
 Os alvos de memória e tempo são transformados com `log1p` no fit. A inferência
-usa limites inferiores de 24 MiB e 200 ms, soma 4 MiB e 80 ms às estimativas e
-aplica margens congeladas. A validação escolhe o menor orçamento médio
+aplica a margem congelada a cada estimativa, acrescenta 4 MiB e 80 ms,
+respectivamente, e aplica os pisos de 24 MiB e 200 ms. A validação escolhe o menor orçamento médio
 normalizado à heurística que alcance cobertura conjunta completa quando
 possível; se a grade não alcançar 100%, escolhe a maior cobertura antes do
 menor orçamento. As margens congeladas são 1,35 para memória e 1,20 para tempo.

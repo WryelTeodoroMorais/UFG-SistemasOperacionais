@@ -28,6 +28,3 @@ hashes do primeiro, do treino e da validação. O carregador recusa usar artefat
 cujo conteúdo não corresponda a esses hashes. Para treinar outro candidato, use
 um diretório de trabalho separado, preserve o teste final intocado e gere um
 novo teste independente após congelar os pesos e as margens.
-
-A apresentação, o roteiro e os relatórios detalhados permanecem locais, fora do
-histórico Git.

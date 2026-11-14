@@ -56,7 +56,7 @@ O índice começa em zero: 1 seleciona a segunda coluna. Nesse exemplo, o relat�
 
 --thresholds aceita de 1 a 8 inteiros em ordem crescente, sem repetições, e substitui --passes. Para iniciar com um valor negativo, use a forma --thresholds=-10,0,997. `auto` usa a fusão por regra algébrica para consultas configuráveis e informa `ml_used=false`: esses operadores não participaram do treino, e os percentuais do benchmark não são extrapolados a eles.
 
-## Onde entra aprendizado supervisionado
+## Seleção experimental de estratégia
 
 O experimento compara três candidatos, incluindo `fused`. O modelo prevê RSS e duração por candidato, usando as features existentes e um indicador da estratégia. Treino e validação usam arquivos separados; o teste é coletado depois de congelar o modelo e o critério de promoção.
 
