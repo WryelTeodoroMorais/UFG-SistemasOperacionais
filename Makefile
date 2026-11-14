@@ -1,6 +1,6 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: test integration doctor demo security
+.PHONY: test integration doctor demo security web
 test:
 	$(PYTHON) -m pytest -q
 
@@ -15,3 +15,6 @@ demo:
 
 security:
 	$(PYTHON) -m sentinela.cli security
+
+web:
+	$(PYTHON) -m sentinela.web

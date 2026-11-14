@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinela ML · Bancada local</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="frame bar">
+      <a href="/" class="brand"><span class="brand-icon" aria-hidden="true">&gt;_</span> Sentinela <strong>ML</strong></a>
+      <span class="local"><span aria-hidden="true"></span> Sessão local</span>
+    </div>
+  </header>
+
+  <main class="frame">
+    <h1>Bancada de execução</h1>
+    <p class="intro">Execute scripts em Bubblewrap e compare os limites escolhidos por cada método.</p>
+    <form id="python-form" class="panel">
+      <div class="panel-heading">
+        <h2>Script e entrada</h2>
+        <button class="secondary" type="button" id="example">Restaurar exemplo</button>
+      </div>
+      <div class="grid script-grid">
+        <label>Exemplo Python
+          <select id="python-example-preset">
+            <option value="validation_summary">JSONL · validação · 100</option>
+          </select>
+        </label>
+        <label>Carregar script .py <span class="muted">opcional</span>
+          <input type="file" id="script-file" accept=".py,text/x-python">
+        </label>
+        <label>Entrada própria <span class="muted">opcional · até 8 MiB</span>
+          <input type="file" id="script-input">
+        </label>
+      </div>
+      <p id="python-example-description" class="hint preset-description" aria-live="polite"></p>
+      <label for="code" class="code-label">Script que será executado</label>
+      <textarea id="code" class="code" rows="9" required spellcheck="false"></textarea>
+      <p class="hint">O código exibido no editor é executado. Carregar um .py substitui o conteúdo do editor; um arquivo de entrada substitui os dados do exemplo.</p>
+      <div class="grid settings">
+        <label>Método
+          <select id="method">
+            <option value="full">ML supervisionado</option>
+            <option value="heuristic">Heurística</option>
+            <option value="fixed">Perfil fixo</option>
+          </select>
+        </label>
+        <label>Volume de treino
+          <select id="tier">
+            <option value="small">Pequeno · 500 tarefas</option>
+            <option value="medium">Médio · 1.500 tarefas</option>
+            <option value="full" selected>Completo · 3.300 tarefas</option>
+          </select>
+        </label>
+        <label>Heurística
+          <select id="heuristic" disabled>
+            <option value="ast">AST + tamanho · padrão</option>
+            <option value="size">Tamanho · acessos permitidos</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="submit" name="action" value="run" class="primary">Executar</button>
+        <button type="submit" name="action" value="compare" class="secondary">Comparar os cinco métodos</button>
+      </div>
+    </form>
+
+    <p id="status" role="status" aria-live="polite" hidden></p>
+    <section id="results" class="panel results" aria-labelledby="results-title" hidden>
+      <div class="panel-heading"><h2 id="results-title">Resultados</h2></div>
+      <div id="results-body"></div>
+    </section>
+  </main>
+</body>
+</html>
