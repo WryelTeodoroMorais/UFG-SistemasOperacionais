@@ -1,5 +1,7 @@
-from pathlib import Path
+import json
+
 import pytest
+
 from sentinela.data import load, validate_split
 from sentinela.features import FEATURE_NAMES, extract
 from sentinela.tasks import FAMILIES, make_task
