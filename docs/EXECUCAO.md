@@ -94,4 +94,7 @@ e uma verificação de rejeição de capacidade de rede.
 | RLIMIT_FSIZE | Limita tamanho de cada arquivo | Quota total de disco/tmpfs |
 | Exportação controlada | Evita seguir symlinks e sobrescrever destino | Segurança contra corrida adversarial sofisticada |
 
-Não há limite agregado de processos ou memória, seccomp específico ou autenticação multiusuário. Portanto o protótipo avalia contenção funcional de tarefas controladas e integração com ML. Implantação para código deliberadamente hostil exige endurecimento adicional e auditoria.
+O protótipo usa limites por processo e não implementa limites agregados de
+processos ou memória, seccomp específico ou autenticação multiusuário. Os
+resultados apresentados medem contenção funcional nos workloads controlados
+avaliados.

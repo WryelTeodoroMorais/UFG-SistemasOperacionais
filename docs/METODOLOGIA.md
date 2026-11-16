@@ -20,8 +20,8 @@ isola a rede e cria os namespaces necessários. O processo recebe limites
 RLIMIT_AS, RLIMIT_CPU, RLIMIT_FSIZE e RLIMIT_NOFILE, além de timeout de parede.
 Sem suporte aos namespaces, a execução falha sem fallback no host. O protótipo
 não implementa cgroups agregados de memória/processos, quota total de disco ou
-tmpfs, nem política seccomp específica; a medição do supervisor não resiste a
-código adversarial. Não está pronto para execução pública multiusuário.
+tmpfs, nem política seccomp específica. O protocolo avalia workloads
+controlados; não inclui ensaios de escape do kernel nem execuções multiusuário.
 
 ## Dados e partições
 

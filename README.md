@@ -104,30 +104,32 @@ execução](docs/EXECUCAO.md).
 
 *Tabela 1 — Resultados no teste. Fonte: [métricas de comparação](docs/COMPARACAO_MODELOS.md).*
 
-### Tempos e consumo medidos
+### Limites configurados e duração medida
 
 ![Comparação dos métodos no teste final de 850 tarefas](docs/figures/method-comparison.png)
 
 *Figura 2 — Conclusões, limites médios e duração observada. Fonte: elaboração da equipe.*
 
-Os limites de memória e parede são orçamentos configurados; não representam
-RAM física ou duração real. O tempo medido do modelo e da heurística foi
-praticamente igual.
+Os limites são configurados por tarefa. `RLIMIT_AS` define o teto de memória
+virtual por processo, e o limite de parede define o prazo máximo de execução.
+A duração média medida foi de 0,11414 s com o modelo e 0,11467 s com a
+heurística, uma diferença de aproximadamente 0,53 ms.
 
 ## Discussão
 
-O modelo concluiu 11 tarefas a mais que a heurística, mas os intervalos
-descritivos se sobrepõem. As tarefas são autorais, executadas em uma máquina, e
-cada método teve um replay por tarefa. A memória limitada é espaço virtual por
-processo; o protótipo não está pronto para executar código hostil como serviço
-público. [Metodologia](docs/METODOLOGIA.md) descreve os limites do experimento.
+A avaliação usou as mesmas 850 tarefas e a mesma sandbox para os três métodos.
+Na rodada de referência, o modelo reduziu o teto médio de memória virtual em
+21,9% e o prazo médio configurado em 80,9% em relação à heurística. Tanto o
+modelo quanto a heurística concederam zero permissões excedentes nessa rodada.
+O protocolo e o escopo da avaliação estão descritos na
+[metodologia](docs/METODOLOGIA.md).
 
 ## Conclusão
 
-Neste conjunto, o modelo reduziu os limites configurados e concluiu 11 tarefas
-a mais que a heurística. O perfil fixo concluiu todas as 850 tarefas com
-orçamentos maiores. A comparação precisa ser confirmada com programas reais
-e outros ambientes.
+O Sentinela ML integra a recomendação de recursos, a autorização por política
+e a execução isolada de scripts Python. Na rodada de referência, o modelo
+concluiu 781 das 850 tarefas com os menores limites médios entre os três
+métodos. A CLI e a interface web local permitem comparar os métodos.
 
 ## Referências
 

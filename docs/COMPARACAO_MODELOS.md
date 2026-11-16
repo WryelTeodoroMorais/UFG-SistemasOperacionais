@@ -11,9 +11,12 @@ três métodos; cada método teve um replay por tarefa.
 | Supervisionado | 781/850 (91,9%) | 39,56 MiB | 0,246 s | 0,114 s | 0 / 0 |
 
 O modelo concluiu 11 tarefas a mais que a heurística. Reduziu o limite médio
-configurado de memória em 21,9% e o limite médio de parede em 80,9%. O tempo
-observado médio ficou praticamente igual entre modelo e heurística; o resultado
-mostra orçamentos menores, não aceleração medida do programa nem redução de RAM
+configurado de memória em 21,9% e o limite médio de parede em 80,9%. O limite
+de memória é espaço virtual por processo (`RLIMIT_AS`), não RAM física. O limite
+de parede é um timeout máximo, não a duração consumida pela tarefa. O tempo
+decorrido médio observado foi 0,11414 s para o modelo e 0,11467 s para a
+heurística, uma diferença de aproximadamente 0,53 ms. Assim, os dados mostram
+orçamentos menores, sem evidência de execução mais rápida ou redução de RAM
 física.
 
 | Métrica preditiva do modelo | Resultado |
