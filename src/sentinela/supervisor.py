@@ -42,9 +42,10 @@ def main():
             if pid:
                 child.returncode = os.waitstatus_to_exitcode(status)
                 break
-            if time.monotonic() - started > settings["wall_seconds"]:
+            if not timed_out and time.monotonic() - started > settings["wall_seconds"]:
                 timed_out = True
-                child.kill()
+                # Popen.kill() polls and can reap the child before wait4 collects its usage.
+                os.kill(child.pid, signal.SIGKILL)
             time.sleep(0.002)
     result = {
         "returncode": child.returncode, "timed_out": timed_out,
