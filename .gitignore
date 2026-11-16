@@ -7,3 +7,6 @@ build/
 dist/
 demo-output/
 demo-*/
+/reports/
+/docs/apresentacoes/semana-3/roteiro-apresentacao.md
+/docs/apresentacoes/semana-3/roteiro-apresentacao.pdf
