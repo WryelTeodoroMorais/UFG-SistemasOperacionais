@@ -16,7 +16,8 @@ componentes técnicos.
 
 ## Apresentações
 
-A apresentação da semana 2 está no [README](../README.md#apresentações).
+A apresentação inicial da semana 1 e a apresentação de resultados da semana 3
+estão no [README](../README.md#apresentações).
 
 ## Escopo dos resultados
 

@@ -15,7 +15,8 @@ Sandbox e previsão de recursos com aprendizado de máquina
 
 ## Apresentações
 
-1. [Apresentação da segunda semana](docs/apresentacoes/semana-2/apresentacao-semana-2.pptx) e [versão PDF](docs/apresentacoes/semana-2/apresentacao-semana-2.pdf).
+1. [Semana 1 — Apresentação inicial da proposta (PDF)](docs/apresentacoes/semana-1/apresentacao-semana-1.pdf).
+2. [Semana 3 — Apresentação dos resultados (PowerPoint)](docs/apresentacoes/semana-3/apresentacao-semana-3.pptx) e [versão PDF](docs/apresentacoes/semana-3/apresentacao-semana-3.pdf).
 
 ## Resumo
 
