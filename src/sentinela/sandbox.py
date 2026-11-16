@@ -16,15 +16,13 @@ class SandboxUnavailable(RuntimeError):
 
 
 def run(code: str, input_data: bytes = b"", budget: Budget | None = None,
-        destination: Path | None = None, *, input_path: Path | None = None) -> dict:
+        destination: Path | None = None) -> dict:
     budget = budget or Budget()
     bwrap = shutil.which("bwrap")
     if not bwrap:
         raise SandboxUnavailable("Instale bubblewrap. Não existe execução insegura de fallback.")
     if len(code.encode()) > 128_000 or len(input_data) > 8 * 1024**2:
         raise ValueError("Código máximo 128 kB; entrada máxima 8 MiB")
-    if input_path is not None and input_data:
-        raise ValueError("Use input_data ou input_path, não ambos")
     with tempfile.TemporaryDirectory(prefix="sentinela-") as temp:
         root = Path(temp)
         app, inputs, outputs = (root / p for p in ("app", "input", "output"))
@@ -33,16 +31,7 @@ def run(code: str, input_data: bytes = b"", budget: Budget | None = None,
         (app / "task.py").write_text(code)
         (app / "supervisor.py").write_text(Path(__file__).with_name("supervisor.py").read_text())
         (app / "settings.json").write_text(json.dumps(budget.to_dict()))
-        if input_path is None:
-            (inputs / "data.txt").write_bytes(input_data)
-        else:
-            with Path(input_path).open("rb") as source, (inputs / "data.txt").open("wb") as target:
-                total = 0
-                while chunk := source.read(1024**2):
-                    total += len(chunk)
-                    if total > 64 * 1024**2:
-                        raise ValueError("Entrada por arquivo excede 64 MiB")
-                    target.write(chunk)
+        (inputs / "data.txt").write_bytes(input_data)
         args = [bwrap, "--unshare-all", "--unshare-user", "--die-with-parent", "--new-session",
                 "--disable-userns", "--cap-drop", "ALL", "--clearenv",
                 "--setenv", "PATH", "/usr/bin", "--setenv", "HOME", "/tmp",

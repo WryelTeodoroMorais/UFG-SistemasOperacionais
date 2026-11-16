@@ -25,8 +25,6 @@ com:
 | `train` | Ajusta o modelo híbrido ativo e grava sua configuração congelada usando a validação. |
 | `evaluate DIVISAO` | Avalia `validation` ou `test` quando os dados e o modelo necessários estão disponíveis. |
 | `security` | Executa os ensaios funcionais de contenção. |
-| `plan-csv ARQUIVOS...` | Mostra a decisão para a operação CSV conhecida sem iniciar o sandbox. |
-| `process-csv ARQUIVOS... --output PASTA` | Executa essa operação CSV isolada e mede tempo e RSS. |
 
 Exemplo de uso do modelo distribuído:
 
@@ -36,19 +34,8 @@ Exemplo de uso do modelo distribuído:
   --input examples/entrada.csv --output demo-output --method supervised
 ```
 
-O comando `run` trata scripts Python. Os comandos CSV tratam somente a
-agregação numérica documentada em [Fusão e justificativa](FUSAO_E_JUSTIFICATIVA.md).
-
-## Estratégias CSV
-
-A CLI oferece duas estratégias:
-
-- `auto` (padrão): aplica a regra de promoção validada; sem modelo CSV aprovado,
-  usa a agregação `fused` em uma passagem.
-- `fused`: escolhe explicitamente a mesma agregação de uma passagem.
-
-As implementações `memory`, `blocks` e `heuristic` permanecem como baselines
-internas de benchmark, sem opções correspondentes na CLI.
+O comando `run` executa scripts Python. Eles podem processar entradas CSV,
+JSONL ou outros formatos implementados pelo próprio script.
 
 ## Fluxo de execução
 
@@ -58,8 +45,6 @@ definido pelo operador. O sandbox aplica os limites e disponibiliza entrada
 somente para leitura, saída controlada e rede isolada. A recomendação do modelo
 não pode conceder permissões além desse teto.
 
-O modelo de recursos de `run` é independente do otimizador da operação CSV.
-
 Detalhes das partições, features e avaliação estão em
 [Metodologia](METODOLOGIA.md); as métricas finais estão em
 [Comparação de modelos](COMPARACAO_MODELOS.md).
@@ -68,17 +53,13 @@ Detalhes das partições, features e avaliação estão em
 
 `models/model.joblib` contém o modelo de recursos carregado por
 `run --method supervised`; `models/frozen.json` registra as margens e hashes que
-validam o par. A política CSV está descrita em
-[Fusão e justificativa](FUSAO_E_JUSTIFICATIVA.md). Parâmetros e critérios de
-seleção do modelo de recursos estão em [Metodologia](METODOLOGIA.md).
+validam o par. Parâmetros e critérios de seleção do modelo estão em
+[Metodologia](METODOLOGIA.md).
 
 ## Organização do código
 
 - `src/sentinela/`: pacote ativo e único caminho de execução da CLI, sandbox,
-  política, modelo e estratégias CSV.
+  política e modelo.
 - `data/` e `models/`: dados medidos, modelo e configuração ativos.
-- `evolution/fusion/`: protocolo, configuração congelada e relatório da avaliação
-  CSV. Dados brutos e saídas de benchmark ficam locais.
-- `scripts/`: reprodução de experimentos e benchmarks. O pacote da fusão inclui
-  arquivos rastreados pelo Git e dois CSVs de demonstração; saídas ficam locais.
+- `scripts/`: coleta, treinamento, avaliação e reprodução do experimento.
 - `tests/`: verificações da implementação ativa.

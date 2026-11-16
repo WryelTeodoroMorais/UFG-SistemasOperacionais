@@ -84,20 +84,14 @@ de sucesso sem timeout e correspondência do stdout e dos arquivos esperados.
 
 *Figura 1 — Fluxo do experimento. Fonte: elaboração da equipe.*
 
-### Operação CSV
-
-A operação CSV usa `fused`, que lê e processa cada linha uma vez. A seleção por
-ML só é usada se passar o critério de promoção; os resultados e comandos estão
-em [Fusão CSV](docs/FUSAO_E_JUSTIFICATIVA.md).
-
 ## Resultados
 
 ### Funcionamento do protótipo
 
-A suíte completa reúne 44 testes unitários e de integração. O comando
-`sentinela security` executa nove casos controlados e verifica se a política
-rejeita pedidos de acesso à rede. Os comandos de verificação e os limites
-estão no [guia de execução](docs/EXECUCAO.md).
+A suíte cobre componentes unitários e de integração. O comando `sentinela security`
+executa nove casos controlados e verifica se a política rejeita pedidos de
+acesso à rede. Os comandos de verificação e os limites estão no [guia de
+execução](docs/EXECUCAO.md).
 
 ### Comparação dos métodos
 

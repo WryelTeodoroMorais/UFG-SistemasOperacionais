@@ -13,7 +13,6 @@ componentes técnicos.
 ## Modelo e avaliações
 
 - [Métricas de comparação entre modelos](COMPARACAO_MODELOS.md).
-- [Fusão CSV e critério de promoção de ML](FUSAO_E_JUSTIFICATIVA.md).
 
 ## Apresentações
 

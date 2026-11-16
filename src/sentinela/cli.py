@@ -3,30 +3,6 @@ import json
 from pathlib import Path
 import sys
 
-CSV_STRATEGIES = ("auto", "fused")
-CSV_STRATEGY_HELP = (
-    "auto: padrão, usa a política promovida; fused: uma passagem explícita"
-)
-
-
-def _add_csv_arguments(
-    command: argparse.ArgumentParser, *, include_output: bool = False
-) -> None:
-    command.add_argument("inputs", type=Path, nargs="+")
-    if include_output:
-        command.add_argument("--output", type=Path, required=True)
-    command.add_argument("--strategy", choices=CSV_STRATEGIES, default="auto",
-                         help=CSV_STRATEGY_HELP)
-    command.add_argument("--memory-target-mb", type=float, default=64)
-    command.add_argument("--passes", type=int, default=1)
-    command.add_argument("--chunk-rows", type=int, default=2048)
-    command.add_argument("--header", action="store_true")
-    command.add_argument("--thresholds",
-                         help="Limiares inteiros crescentes separados por vírgula; substitui --passes")
-    command.add_argument("--value-column", type=int,
-                         help="Coluna numérica por índice a partir de zero; padrão: soma das colunas")
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Sentinela ML: execução isolada com recomendação supervisionada")
     parser.add_argument("--root", type=Path, default=Path.cwd())
@@ -46,13 +22,6 @@ def main(argv=None):
     run.add_argument("--input", type=Path)
     run.add_argument("--output", type=Path, required=True)
     run.add_argument("--method", choices=["fixed", "heuristic", "supervised"], default="supervised")
-    plan = sub.add_parser("plan-csv", help="Mostra a estratégia prevista sem iniciar o sandbox")
-    _add_csv_arguments(plan)
-    process = sub.add_parser(
-        "process-csv",
-        help="Processa CSV isolado com a política atual; mede RSS e tempo reais",
-    )
-    _add_csv_arguments(process, include_output=True)
     args = parser.parse_args(argv)
     root = args.root.resolve()
     try:
@@ -74,16 +43,6 @@ def main(argv=None):
         elif args.command == "security":
             from .security import verify
             result = verify(root)
-        elif args.command == "plan-csv":
-            from .strategies import plan_csv
-            result = plan_csv(root, args.inputs, args.strategy, args.memory_target_mb,
-                              args.passes, args.chunk_rows, args.header,
-                              args.thresholds, args.value_column)
-        elif args.command == "process-csv":
-            from .strategies import process_csv
-            result = process_csv(root, args.inputs, args.output, args.strategy,
-                                 args.memory_target_mb, args.passes, args.chunk_rows, args.header,
-                                 args.thresholds,args.value_column)
         else:
             from .features import extract
             from .policy import Budget, authorize
