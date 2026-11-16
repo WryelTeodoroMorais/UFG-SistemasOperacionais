@@ -6,6 +6,7 @@ import statistics
 
 import numpy as np
 
+from .assets import asset_path
 from .data import digest, load
 from .learning import frozen, prediction_report, recommend
 from .policy import Budget, authorize
@@ -74,7 +75,7 @@ def evaluate(root: Path, split="validation"):
             "per_family": {family: {"n": sum(r["family"] == family for r in subset),
                                     "successes": sum(r["success"] for r in subset if r["family"] == family)}
                            for family in sorted({r["family"] for r in subset})}}
-    report = {"split": split, "source_sha256": digest(root / "data" / f"{split}.jsonl"),
+    report = {"split": split, "source_sha256": digest(asset_path(root, f"data/{split}.jsonl")),
               "frozen_model_sha256": config["model_sha256"],
               "prediction": prediction_report(root, split), "methods": summaries,
               "execution": results,

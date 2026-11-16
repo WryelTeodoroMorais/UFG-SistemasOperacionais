@@ -10,6 +10,7 @@ from pathlib import Path
 import random
 import tempfile
 
+from .assets import asset_path
 from . import learning
 from .data import digest
 from .evaluation import baseline
@@ -75,8 +76,8 @@ def training_order(source: Path):
 def model_for(root: Path, tier: str):
     if tier == "full":
         return learning.frozen(root)
-    train = root / "data/train.jsonl"
-    validation = root / "data/validation.jsonl"
+    train = asset_path(root, "data/train.jsonl")
+    validation = asset_path(root, "data/validation.jsonl")
     signature = hashlib.sha256(
         (digest(train) + digest(validation) + digest(Path(learning.__file__))
          + digest(Path(__file__))).encode()
@@ -141,7 +142,7 @@ def execute_python(root: Path, payload: dict, directory: Path):
         data = b""
         use_input = False
     elif isinstance(input_example, str) and input_example in LOCAL_INPUTS:
-        data = (root / LOCAL_INPUTS[input_example]).read_bytes()
+        data = asset_path(root, LOCAL_INPUTS[input_example]).read_bytes()
         use_input = True
     else:
         raise ValueError("Escolha um exemplo de entrada local válido.")
@@ -221,7 +222,7 @@ class Handler(BaseHTTPRequestHandler):
             root = self.server.root
             scripts = [
                 {"id": identifier, "label": item["label"],
-                 "code": (root / item["path"]).read_text()}
+                 "code": asset_path(root, item["path"]).read_text()}
                 for identifier, item in PYTHON_EXAMPLES.items()
             ]
             self.send_json(200, {
@@ -268,8 +269,8 @@ def main():
     parser.add_argument("--prepare-models", action="store_true")
     args = parser.parse_args()
     root = Path.cwd()
-    if not (root / "data/train.jsonl").is_file():
-        parser.error("Execute na raiz do repositório Sentinela ML.")
+    if not asset_path(root, "data/train.jsonl").is_file():
+        parser.error("Os dados de treino do Sentinela ML não foram encontrados.")
     if args.prepare_models:
         for tier in TIERS:
             _, config = model_for(root, tier)

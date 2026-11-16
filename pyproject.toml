@@ -19,7 +19,14 @@ sentinela = "sentinela.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-sentinela = ["web_assets/*.html", "web_assets/*.js", "web_assets/*.css"]
+sentinela = [
+    "web_assets/*.html",
+    "web_assets/*.js",
+    "web_assets/*.css",
+    "_assets/data/*",
+    "_assets/models/*",
+    "_assets/examples/*",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

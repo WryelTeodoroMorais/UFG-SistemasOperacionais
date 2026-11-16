@@ -7,6 +7,7 @@ from pathlib import Path
 import platform
 import statistics
 
+from .assets import asset_path
 from .features import FEATURE_NAMES, extract
 from .policy import Budget
 from .sandbox import run
@@ -26,7 +27,8 @@ def digest(path: Path) -> str:
 
 def load(root: Path, split: str) -> list[dict]:
     validate_split(split)
-    return [json.loads(line) for line in (root / "data" / f"{split}.jsonl").read_text().splitlines()]
+    path = asset_path(root, f"data/{split}.jsonl")
+    return [json.loads(line) for line in path.read_text().splitlines()]
 
 
 def collect(root: Path, split: str, repeats=3, *, append=False):

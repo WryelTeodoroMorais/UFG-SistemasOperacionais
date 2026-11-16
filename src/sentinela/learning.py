@@ -10,6 +10,7 @@ from sklearn.ensemble import (ExtraTreesClassifier, ExtraTreesRegressor,
                               GradientBoostingRegressor)
 from sklearn.metrics import mean_absolute_error, f1_score
 
+from .assets import asset_path
 from .data import digest, load
 from .features import FEATURE_NAMES, extract
 from .policy import Budget, authorize
@@ -49,7 +50,7 @@ def train(root: Path):
     clf.fit(x, labels)
     package = {"regressor": reg, "regressor_kind": "hybrid-et256-leaf4",
                "classifier": clf, "features": FEATURE_NAMES,
-               "train_sha256": digest(root / "data/train.jsonl"),
+               "train_sha256": digest(asset_path(root, "data/train.jsonl")),
                "train_ids": [r["id"] for r in rows],
                "train_families": sorted({r["family"] for r in rows})}
     (root / "models").mkdir(exist_ok=True)
@@ -125,7 +126,7 @@ def _freeze_model(root: Path):
               "train_sha256": package["train_sha256"],
               "train_samples": len(package["train_ids"]),
               "train_families": len(package["train_families"]),
-              "validation_sha256": digest(root / "data/validation.jsonl"),
+              "validation_sha256": digest(asset_path(root, "data/validation.jsonl")),
               "test_used": False,
               "coverage_target": coverage_target,
               "selection_rule": "minimum mean budget normalized to the heuristic, subject to 100% joint memory/time coverage on validation when attainable; otherwise maximum coverage",
@@ -135,14 +136,15 @@ def _freeze_model(root: Path):
 
 
 def frozen(root: Path):
-    config = json.loads((root / "models/frozen.json").read_text())
-    if digest(root / "models/model.joblib") != config["model_sha256"]:
+    config = json.loads(asset_path(root, "models/frozen.json").read_text())
+    model_path = asset_path(root, "models/model.joblib")
+    if digest(model_path) != config["model_sha256"]:
         raise ValueError("Modelo alterado depois do congelamento")
-    if digest(root / "data/train.jsonl") != config["train_sha256"]:
+    if digest(asset_path(root, "data/train.jsonl")) != config["train_sha256"]:
         raise ValueError("Treino alterado depois do congelamento")
-    if digest(root / "data/validation.jsonl") != config["validation_sha256"]:
+    if digest(asset_path(root, "data/validation.jsonl")) != config["validation_sha256"]:
         raise ValueError("Validação alterada depois do congelamento")
-    return joblib.load(root / "models/model.joblib"), config
+    return joblib.load(model_path), config
 
 
 def prediction_report(root: Path, split: str):
