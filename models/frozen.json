@@ -1,23 +1,42 @@
 {
-  "margin": 1.35,
-  "wall_margin": 1.2,
+  "margin": 1.5,
+  "wall_margin": 2.0,
   "coverage": 1.0,
   "memory_coverage": 1.0,
   "wall_coverage": 1.0,
-  "mean_memory_mb": 42.203459968789886,
-  "mean_wall_seconds": 0.2240124615888979,
-  "normalized_budget": 0.4178306955073231,
+  "mean_memory_mb": 54.362394444026876,
+  "mean_wall_seconds": 0.40001485247349144,
+  "normalized_budget": 0.5762321297187032,
   "heuristic_mean_memory_mb": 61.80684753417969,
   "heuristic_mean_wall_seconds": 1.4657319927215575,
+  "candidate_count": 80,
   "regressor_kind": "hybrid-et256-leaf4",
-  "model_sha256": "ca8fab7996824fb2675e0f64f8b9125554f726128c236d727e76d2b41d863177",
-  "train_sha256": "988f44454dd3699e851d3f3ef088a6e53a5f0bb695d7072af58d8f7f5fac56fd",
+  "model_sha256": "5f9d2a7fb5af25a2215d0ffe1b9c5fd81f7456f4b19b6b473509f4fd11f82231",
+  "train_sha256": "a3b762b576ca42279bd331cb76b6ec9753742a9beb5de20cbe96357247977290",
   "train_samples": 3300,
   "train_families": 67,
-  "validation_sha256": "42f3e49889114fca131980e1d4e1c329b7ce5321fa16c918837dcac527feb9e3",
+  "validation_sha256": "3aff759dc23555f305f22536cafba08d5021e37ae1d90f7ad4297100edb61743",
   "test_used": false,
   "coverage_target": 1.0,
-  "selection_rule": "minimum mean budget normalized to the heuristic, subject to 100% joint memory/time coverage on validation when attainable; otherwise maximum coverage",
+  "minimum_operating_memory_margin": 1.5,
+  "minimum_operating_wall_margin": 2.0,
+  "input_resource_envelope": {
+    "minimum_input_mib": 0.5,
+    "quantile": 0.99,
+    "sample_count": 715,
+    "memory_base_mb": 24.0,
+    "memory_mb_per_mib": 26.54750547453756,
+    "wall_base_seconds": 0.08,
+    "wall_seconds_per_mib": 0.3691852097584811
+  },
+  "collection_memory_envelope": {
+    "minimum_items": 1000,
+    "quantile": 0.95,
+    "sample_count": 203,
+    "memory_base_mb": 24.0,
+    "memory_mb_per_million_items": 99.99999999999999
+  },
+  "selection_rule": "minimum mean budget normalized to the heuristic, subject to 100% joint memory/time target coverage on validation when attainable, then apply the calibrated operating margins and train-only resource envelopes; test targets not used for fitting or margin selection",
   "feature_schema": [
     "log_input_bytes",
     "log_code_bytes",
@@ -32,7 +51,27 @@
     "json_calls",
     "hash_calls",
     "allocation_calls",
-    "log_max_literal"
+    "log_max_literal",
+    "log_max_range_iterations",
+    "log_materialized_items",
+    "log_estimated_allocation_mib"
   ],
-  "candidate_count": 80
+  "calibration_basis": "17 pre-execution features with constant-folded range, materialized collection, and byte-allocation estimates; input memory/time envelope from train-only q99 (715 input-reading samples >=0.5 MiB); collection-memory envelope from train-only q95 (203 samples >=1,000 items); margins 1.5/2.0; validation replay 100/100.",
+  "validation_replay": {
+    "successes": 100,
+    "n": 100,
+    "margin": 1.5,
+    "wall_margin": 2.0,
+    "per_family": {
+      "list_filter_v3": "20/20",
+      "tuple_set_v3": "20/20",
+      "json_nested_v3": "20/20",
+      "text_token_index_v3": "20/20",
+      "matrix_transpose_v3": "20/20"
+    },
+    "test_targets_used": false
+  },
+  "test_diagnostics_used_for_feature_design": true,
+  "test_targets_used_for_fit_or_margin_selection": false,
+  "generalization_note": "A prior test error review motivated generic feature engineering; final test score is post-hoc diagnostic, not an independent estimate."
 }

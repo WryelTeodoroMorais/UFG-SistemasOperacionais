@@ -1,4 +1,6 @@
 recursive-include data *
 recursive-include models *
 recursive-include examples *.py *.csv
+recursive-include scripts *.py
 recursive-include src/sentinela/_assets *
+global-exclude *.py[cod]

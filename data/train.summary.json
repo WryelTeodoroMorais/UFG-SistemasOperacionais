@@ -141,11 +141,30 @@
     "write": 12,
     "write_report": 40
   },
-  "sha256": "988f44454dd3699e851d3f3ef088a6e53a5f0bb695d7072af58d8f7f5fac56fd",
+  "sha256": "a3b762b576ca42279bd331cb76b6ec9753742a9beb5de20cbe96357247977290",
   "median_vms_mb": 22.18359375,
   "median_wall_seconds": 0.11036567699920852,
   "platforms": [
     "unknown"
   ],
-  "measurement": "real Linux Bubblewrap execution"
+  "measurement": "real Linux Bubblewrap execution",
+  "feature_schema": [
+    "log_input_bytes",
+    "log_code_bytes",
+    "ast_nodes",
+    "loops",
+    "comprehensions",
+    "calls",
+    "imports",
+    "input_read_calls",
+    "output_write_calls",
+    "sort_calls",
+    "json_calls",
+    "hash_calls",
+    "allocation_calls",
+    "log_max_literal",
+    "log_max_range_iterations",
+    "log_materialized_items",
+    "log_estimated_allocation_mib"
+  ]
 }
