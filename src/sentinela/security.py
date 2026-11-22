@@ -41,6 +41,6 @@ def verify(root: Path):
     report = {"cases": results, "policy_rejects_network": policy_passed,
               "passed": all(r["passed"] for r in results) and policy_passed,
               "scope": "isolamento e limites funcionais em casos controlados; não prova resistência a escapes"}
-    (root / "reports").mkdir(exist_ok=True)
+    (root / "reports").mkdir(parents=True, exist_ok=True)
     (root / "reports/security.json").write_text(json.dumps(report, indent=2, ensure_ascii=False))
     return report

@@ -83,6 +83,6 @@ def evaluate(root: Path, split="validation"):
                          "limite AS é por processo; orçamento não significa RAM reservada",
                          "um replay por método; três medições de referência por tarefa",
                          "poucas famílias; intervalos de Wilson apenas descritivos"]}
-    report_path.parent.mkdir(exist_ok=True)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False))
     return report
