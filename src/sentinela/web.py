@@ -1,4 +1,4 @@
-"""Interface local para executar scripts Python isolados do Sentinela."""
+"""Interface local para executar scripts Python isolados do projeto."""
 import argparse
 import base64
 from collections import defaultdict
@@ -192,7 +192,7 @@ def execute_python(root: Path, payload: dict, directory: Path):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Sentinela"
+    server_version = "Projeto"
 
     def send_body(self, status, content_type, content):
         self.send_response(status)
@@ -270,7 +270,7 @@ def main():
     args = parser.parse_args()
     root = Path.cwd()
     if not asset_path(root, "data/train.jsonl").is_file():
-        parser.error("Os dados de treino do Sentinela ML não foram encontrados.")
+        parser.error("Os dados de treino do projeto não foram encontrados.")
     if args.prepare_models:
         for tier in TIERS:
             _, config = model_for(root, tier)
@@ -278,7 +278,7 @@ def main():
         return
     with HTTPServer(("127.0.0.1", args.port), Handler) as server:
         server.root = root
-        print(f"Sentinela ML · http://127.0.0.1:{server.server_port}", flush=True)
+        print(f"Projeto · http://127.0.0.1:{server.server_port}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

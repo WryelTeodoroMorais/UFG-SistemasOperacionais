@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Sentinela ML: execução isolada com recomendação supervisionada")
+    parser = argparse.ArgumentParser(description="Execução isolada com recomendação supervisionada")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")
