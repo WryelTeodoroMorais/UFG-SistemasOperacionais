@@ -13,14 +13,14 @@ def main():
     methods = ["Fixo", "Heurística", "Supervisionado"]
     colors = ["#758195", "#e69f00", "#2878b5"]
     panels = [
-        ("Conclusão correta", [100.0, 90.6, 91.9], "%", ["100,0%", "90,6%", "91,9%"]),
-        ("Limite médio de memória", [128.0, 50.65, 39.56], "MiB", ["128,00", "50,65", "39,56"]),
-        ("Limite médio de parede", [2.000, 1.286, 0.246], "segundos", ["2,000", "1,286", "0,246"]),
-        ("Tempo observado médio", [0.122, 0.115, 0.114], "segundos", ["0,122", "0,115", "0,114"]),
+        ("Conclusão correta", [100.0, 90.6, 100.0], "%", ["100,0%", "90,6%", "100,0%"]),
+        ("Limite médio de memória", [128.0, 50.65, 45.14], "MiB", ["128,00", "50,65", "45,14"]),
+        ("Limite médio de parede", [2.000, 1.286, 0.357], "segundos", ["2,000", "1,286", "0,357"]),
+        ("Tempo observado médio", [0.135, 0.125, 0.132], "segundos", ["0,135", "0,125", "0,132"]),
     ]
 
     fig, axes = plt.subplots(2, 2, figsize=(11, 7), layout="constrained")
-    fig.suptitle("Comparação dos métodos no teste final", fontsize=17, fontweight="bold")
+    fig.suptitle("Comparação dos métodos — diagnóstico pós-ajuste", fontsize=17, fontweight="bold")
 
     for axis, (title, values, unit, labels) in zip(axes.flat, panels):
         bars = axis.bar(methods, values, color=colors, width=0.62)

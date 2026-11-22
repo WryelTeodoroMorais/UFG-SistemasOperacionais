@@ -4,27 +4,42 @@ O projeto não depende de Codex, LLM pago, Node.js ou ferramentas proprietárias
 Instale os requisitos conforme [EXECUCAO.md](EXECUCAO.md). Resultados de tempo e
 memória podem variar com hardware, kernel e carga.
 
-O clone inclui o dataset final, o modelo ativo e a política congelada. Em uma
-cópia limpa, verifique Bubblewrap e execute:
+O checkout inclui os dados finais, o modelo ativo e a política congelada. Em
+uma cópia limpa, verifique Bubblewrap e execute:
 
 ```bash
 .venv/bin/sentinela doctor
 .venv/bin/sentinela evaluate test
 ```
 
-A avaliação usa as 850 tarefas versionadas em 17 famílias reservadas. O clone
-não precisa coletar novamente os alvos. O comando reproduz as três estratégias
-e grava `reports/test.json`; não sobrescreve relatório existente. A execução
-que gerou as métricas documentadas está em `reports/test-final.json`, local e
-ignorada pelo Git.
+A avaliação usa as 850 tarefas versionadas em 17 famílias. Ela não precisa
+recolher os alvos. O comando executa as três estratégias e grava
+`reports/test.json`, sem sobrescrever um relatório existente. O diagnóstico que
+fundamenta os resultados deste fechamento está em
+`reports/test-modelo-final.json`, local e ignorado pelo Git.
 
-Para recriar os dados de uma partição vazia, use `sentinela collect train`,
-`sentinela collect validation` ou `sentinela collect test`. Cada workload recebe
-três referências em Bubblewrap. `collect test --append` acrescenta apenas IDs
-ausentes a uma coleta parcial e não treina o modelo.
+Para repetir em uma raiz temporária com exatamente os dados e o par de modelo do
+checkout:
+
+```bash
+mkdir -p /tmp/sentinela-final-replay/{data,models}
+cp data/{train,validation,test}.jsonl /tmp/sentinela-final-replay/data/
+cp models/{model.joblib,frozen.json} /tmp/sentinela-final-replay/models/
+PYTHONPATH=src .venv/bin/python -m sentinela.cli \
+  --root /tmp/sentinela-final-replay evaluate test
+```
+
+O avaliador grava `/tmp/sentinela-final-replay/reports/test.json`. Use outra
+raiz para uma nova execução; a duração pode variar entre replays. O relatório
+final registra hashes dos três splits, do modelo e da configuração, além da
+revisão de origem, ambiente e comando usados.
+
+Os vetores de atributos armazenados nos JSONL podem ser regenerados com
+`python scripts/refresh_features.py`. O script reconstrói cada tarefa e confere
+semente, hash de código, hash e tamanho da entrada antes de atualizar os
+atributos, seus nomes e os metadados de resumo; não recolhe nem recalcula alvos
+ou medições.
 
 `models/model.joblib` e `models/frozen.json` formam um par: o segundo registra os
-hashes do primeiro, do treino e da validação. O carregador recusa usar artefatos
-cujo conteúdo não corresponda a esses hashes. Para treinar outro candidato, use
-um diretório de trabalho separado, preserve o teste final intocado e gere um
-novo teste independente após congelar os pesos e as margens.
+hashes do primeiro, do treino e da validação. O carregador rejeita artefatos
+incompatíveis. Para treinar outro candidato, use uma cópia de trabalho nova.

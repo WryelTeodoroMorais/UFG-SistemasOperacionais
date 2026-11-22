@@ -20,14 +20,17 @@ Sandbox e previsão de recursos com aprendizado de máquina
 
 ## Resumo
 
-O projeto avalia um modelo que recomenda limites de recursos e acessos para
-programas Python executados em sandbox Linux. Uma política independente aplica
-os tetos definidos pelo operador.
-
-O dataset contém 3.300 exemplos de treino. No teste de 850 tarefas, o modelo
-concluiu 781, contra 770 da heurística. Seu orçamento médio foi menor, mas o
-tempo de execução observado ficou praticamente igual. Os resultados se
-limitam aos workloads controlados deste projeto.
+O projeto recomenda limites de recursos e acessos para scripts Python em
+sandbox Linux; uma política externa aplica o teto do operador. A versão final
+usa 17 atributos estáticos e envelopes calibrados com treino. Na avaliação
+final, concluiu 850/850 tarefas em 17 famílias (50/50 por família), contra
+770/850 da heurística; seus limites médios foram 45,14 MiB e 0,357 s, contra
+50,65 MiB e 1,286 s da heurística. A execução observada do ML foi 0,132 s,
+contra 0,125 s da
+heurística: o ganho foi em contenção funcional e limites configurados, não em
+velocidade. O protocolo e a interpretação estão em
+[Metodologia](docs/METODOLOGIA.md) e
+[Métricas de comparação](docs/COMPARACAO_MODELOS.md).
 
 ## Introdução
 
@@ -63,17 +66,19 @@ partição, reduzindo a semelhança entre treino e teste.
 | Validação | 100 | 5 |
 | Teste | 850 | 17 |
 
-O teste corresponde a 20% dos 4.250 exemplos e não é usado para ajustar o
-modelo. Cada tarefa tem três execuções de referência. Não há dados de usuários
-nem revisão humana independente.
+O teste corresponde a 20% dos 4.250 exemplos. Cada tarefa tem três execuções
+de referência. Os workloads são sintéticos e foram criados para este projeto.
 
 ### Modelos e infraestrutura
 
-O modelo usa 14 características do código e da entrada. Extra Trees estima
-memória e acessos de leitura/escrita; Gradient Boosting estima tempo. O
-executor usa Bubblewrap, namespaces, rede isolada e limites Linux de memória
-virtual, CPU, tamanho de arquivo e descritores. A política externa restringe
-cada recomendação ao teto do operador.
+O modelo usa 17 características estáticas do código e da entrada. Extra Trees
+estima memória e acessos de leitura/escrita; Gradient Boosting estima tempo.
+Características de faixas, coleções materializadas e alocações literais ajudam
+a identificar padrões de consumo sem regras pelo nome da tarefa. Envelopes
+calibrados apenas no treino protegem entradas e coleções grandes. O executor usa
+Bubblewrap, namespaces, rede isolada e limites Linux de memória virtual, CPU,
+tamanho de arquivo e descritores. A política externa restringe cada
+recomendação ao teto do operador.
 
 ### Métricas e fluxograma
 
@@ -94,42 +99,43 @@ executa nove casos controlados e verifica se a política rejeita pedidos de
 acesso à rede. Os comandos de verificação e os limites estão no [guia de
 execução](docs/EXECUCAO.md).
 
-### Comparação dos métodos
+### Comparação dos métodos — versão final
 
-| Método | Tarefas concluídas | Memória configurada | Limite de parede | Tempo observado | Acessos omitidos/excedentes |
+| Método | Tarefas concluídas | Memória configurada | Limite de tempo | Tempo observado | Acessos omitidos/excedentes |
 |---|---:|---:|---:|---:|---:|
-| Fixo | 850/850 | 128,00 MiB | 2,000 s | 0,122 s | 0/900 |
-| Heurística | 770/850 | 50,65 MiB | 1,286 s | 0,115 s | 0/0 |
-| Supervisionado | 781/850 | 39,56 MiB | 0,246 s | 0,114 s | 0/0 |
+| Fixo | 850/850 | 128,00 MiB | 2,000 s | 0,135 s | 0/900 |
+| Heurística | 770/850 | 50,65 MiB | 1,286 s | 0,125 s | 0/0 |
+| Supervisionado final | 850/850 | 45,14 MiB | 0,357 s | 0,132 s | 0/0 |
 
-*Tabela 1 — Resultados no teste. Fonte: [métricas de comparação](docs/COMPARACAO_MODELOS.md).*
+*Tabela 1 — Resultados finais em 850 tarefas. Fonte: [métricas de comparação](docs/COMPARACAO_MODELOS.md).*
+
+O modelo concluiu 50/50 tarefas em cada família com limites médios menores que
+a heurística, mas não foi mais rápido. O histórico das rodadas está em
+[Métricas de comparação](docs/COMPARACAO_MODELOS.md).
 
 ### Limites configurados e duração medida
 
-![Comparação dos métodos no teste final de 850 tarefas](docs/figures/method-comparison.png)
+![Comparação dos métodos nos resultados finais de 850 tarefas](docs/figures/method-comparison.png)
 
 *Figura 2 — Conclusões, limites médios e duração observada. Fonte: elaboração da equipe.*
 
-Os limites são configurados por tarefa. `RLIMIT_AS` define o teto de memória
-virtual por processo, e o limite de parede define o prazo máximo de execução.
-A duração média medida foi de 0,11414 s com o modelo e 0,11467 s com a
-heurística, uma diferença de aproximadamente 0,53 ms.
-
 ## Discussão
 
-A avaliação usou as mesmas 850 tarefas e a mesma sandbox para os três métodos.
-Na rodada de referência, o modelo reduziu o teto médio de memória virtual em
-21,9% e o prazo médio configurado em 80,9% em relação à heurística. Tanto o
-modelo quanto a heurística concederam zero permissões excedentes nessa rodada.
-O protocolo e o escopo da avaliação estão descritos na
-[metodologia](docs/METODOLOGIA.md).
+A política que limita a recomendação aplica o princípio do menor privilégio
+[1]. Extra Trees e os estimadores do scikit-learn fundamentam a previsão de
+recursos [2, 3], enquanto a separação das famílias segue cuidados para evitar
+vazamento entre variantes [7]. Bubblewrap e os limites de recursos e namespaces
+do Linux fornecem os mecanismos de isolamento usados pelo protótipo [4–6]. A
+avaliação compara workloads sintéticos executados em uma máquina Linux; o
+ambiente e o protocolo estão detalhados na [metodologia](docs/METODOLOGIA.md).
 
 ## Conclusão
 
-O Sentinela ML integra a recomendação de recursos, a autorização por política
-e a execução isolada de scripts Python. Na rodada de referência, o modelo
-concluiu 781 das 850 tarefas com os menores limites médios entre os três
-métodos. A CLI e a interface web local permitem comparar os métodos.
+O projeto integra recomendação de recursos, autorização por política e
+execução isolada de scripts Python. Na avaliação final, o modelo concluiu
+850/850 tarefas, contra 770/850 da heurística, com limites médios menores. O
+tempo observado foi 0,132 s para o modelo e 0,125 s para a heurística; o ganho
+ficou na contenção funcional e nos limites configurados.
 
 ## Referências
 

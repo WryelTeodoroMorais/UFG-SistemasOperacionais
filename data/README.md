@@ -12,8 +12,10 @@ representativa de agentes reais.
 | `test.jsonl` | Avaliação final reservada | 17 | 850 |
 
 As partições totalizam 4.250 registros; o teste corresponde a 20%. As famílias
-de teste são distintas das de treino e validação, e seus registros não são
-usados para ajustar o modelo.
+de teste são distintas das de treino e validação. Os alvos do teste não foram
+usados para ajustar pesos ou selecionar margens; a análise das falhas por
+família orientou a engenharia de features genéricas, então o resultado final
+do teste é diagnóstico pós-ajuste, não uma estimativa independente.
 
 Cada registro preserva identificador, semente, família, partição, hashes do
 código e da entrada, features anteriores à execução, capacidades declaradas e
@@ -26,11 +28,14 @@ Os geradores em `src/sentinela/tasks/` reconstroem programas e entradas; os
 alvos são medições, não valores calculados por fórmula. Capacidades são rótulos
 do contrato de cada tarefa, não Linux capabilities nem uma regra causal para
 código arbitrário. O protocolo e as features estão em
-[METODOLOGIA.md](../docs/METODOLOGIA.md).
+[METODOLOGIA.md](../docs/METODOLOGIA.md); a atualização verificável do cache
+está em [Reprodução](../docs/REPRODUCAO_ARTEFATOS.md).
 
 Os resumos JSON registram contagens, famílias, ambiente de medição e SHA-256 de
 cada arquivo. `models/frozen.json` registra os hashes de treino, validação e
 modelo para detectar divergências entre os dados e o artefato avaliado.
 
-Os relatórios completos ficam em `reports/`, ignorados pelo Git. A comparação
-final resumida está em [COMPARACAO_MODELOS.md](../docs/COMPARACAO_MODELOS.md).
+Os relatórios completos ficam em `reports/`, ignorados pelo Git. O diagnóstico
+do modelo final está em `reports/test-modelo-final.json`; a comparação resumida
+e o histórico ficam em
+[COMPARACAO_MODELOS.md](../docs/COMPARACAO_MODELOS.md).

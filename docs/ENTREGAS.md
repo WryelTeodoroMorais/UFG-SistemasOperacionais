@@ -1,27 +1,23 @@
 # Mapa do projeto
 
-O README resume o relatório do trabalho. Esta página aponta os principais
-componentes técnicos.
+O [README](../README.md) apresenta o seminário. Esta página aponta os guias e
+artefatos do projeto.
 
 ## Implementação
 
 - [Instalação, execução e limites](EXECUCAO.md).
-- [Comandos da CLI e organização do código](GUIA_TECNICO.md).
-- [Metodologia, dados e métricas](METODOLOGIA.md).
-- [Dados versionados e seus resumos](../data/README.md).
+- [CLI e organização do código](GUIA_TECNICO.md).
+- [Metodologia e protocolo](METODOLOGIA.md).
+- [Dados e rastreabilidade](../data/README.md).
+- `scripts/refresh_features.py` regenera os atributos em cache sem repetir as
+  medições.
 
-## Modelo e avaliações
+## Modelo e avaliação
 
-- [Métricas de comparação entre modelos](COMPARACAO_MODELOS.md).
+- [Resultados e histórico](COMPARACAO_MODELOS.md).
+- [Reprodução do modelo e da avaliação](REPRODUCAO_ARTEFATOS.md).
 
 ## Apresentações
 
-A apresentação inicial da semana 1 e a apresentação de resultados da semana 3
-estão no [README](../README.md#apresentações).
-
-## Escopo dos resultados
-
-Há um único modelo ativo. Os dados, protocolo e limites estão descritos em
-[Metodologia](METODOLOGIA.md); os resultados e baselines ficam em
-[Métricas de comparação](COMPARACAO_MODELOS.md). Os relatórios detalhados de
-avaliação são gerados localmente.
+O histórico e os arquivos das semanas estão listados no
+[README](../README.md#apresentações).
