@@ -17,6 +17,7 @@ Sandbox e previsão de recursos com aprendizado de máquina
 
 1. [Semana 1 — Apresentação inicial da proposta (PowerPoint)](docs/apresentacoes/semana-1/apresentacao-semana-1.pptx) e [versão PDF](docs/apresentacoes/semana-1/apresentacao-semana-1.pdf).
 2. [Semana 3 — Apresentação dos resultados (PowerPoint)](docs/apresentacoes/semana-3/apresentacao-semana-3.pptx) e [versão PDF](docs/apresentacoes/semana-3/apresentacao-semana-3.pdf).
+3. [Semana 4 — Apresentação final do projeto (PowerPoint)](docs/apresentacoes/semana-4/apresentacao-semana-4.pptx) e [versão PDF](docs/apresentacoes/semana-4/apresentacao-semana-4.pdf).
 
 ## Resumo
 
